@@ -1,0 +1,7 @@
+fdd.rejoindre("0650","1300","1","100",ser)
+#fdd.orienter("270","090", ser)
+#fdd.orienter("000","090", ser)
+##fdd.avancer("0200","090",ser)
+fdd.rejoindre("2550","1300","1","100",ser)
+#fdd.reculer("1000","090",ser)
+#fdd.avancer("1000","090",ser)

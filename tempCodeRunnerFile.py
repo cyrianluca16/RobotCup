@@ -1,0 +1,1 @@
+lbl_mouse_coords

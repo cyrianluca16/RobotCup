@@ -1,0 +1,88 @@
+
+#####################################
+fdd.rejoindre("0650","1300","1","100",ser)
+
+fdd.orienter("000","090", ser)
+#atm.Start_Pompe("1","1","1",B)
+#atm.Start_Turbine("1","1","1",B)
+fdd.avancer("0200","090",ser)
+
+fdd.reculer("0200","090",ser)
+
+
+#atm.Stop_Turbine("1","1","1",B)
+
+
+fdd.avancer("0350","090",ser)
+
+fdd.cibler("0650", "0700", "030", ser)
+####################premiere zone attrape
+
+
+
+fdd.rejoindre("0650", "0700","1", "090", ser)
+
+fdd.orienter("180","090", ser)
+#atm.Start_Pompe("1","1","1",B)
+#atm.Start_Turbine("1","1","1",B)
+fdd.reculer("0200","090",ser)
+fdd.avancer("0200","090",ser)
+
+
+
+
+#atm.Stop_Turbine("1","1","1",B)
+
+
+
+fdd.reculer("0350","090",ser)
+
+
+#####################fini zone 1 
+
+
+fdd.cibler("0800", "0950", "090", ser)
+fdd.rejoindre("1200", "0400", "0", "090", ser)
+fdd.orienter("180","100",ser)
+fdd.rejoindre("2000", "0400", "0", "130", ser)
+fdd.rejoindre("2800", "0250", "0", "130", ser)
+##############
+######pots off
+fdd.orienter("090","100",ser)
+
+########drop plants violette face A
+
+
+fdd.rejoindre("2825", "0875", "1", "090", ser)
+fdd.reculer("0295", "100", ser)
+fdd.orienter("180","100",ser)
+
+# #autom monte bras depose all
+pos.Callage_X("2860","180","0","030",ser)
+# #autom fdd
+
+fdd.avancer("0200", "090", ser)
+fdd.cibler("2250", "0250", "090", ser)
+fdd.rejoindre("2250", "0250", "0", "080", ser)
+fdd.orienter("270", "090", ser)
+# #monter bras 
+pos.Callage_Y("0140","270","1","030",ser)
+#depose
+fdd.reculer("0150", "100", ser)
+fdd.cibler("2250", "1500","050", ser)
+fdd.rejoindre("2250", "1500", "1", "100", ser)
+
+
+
+fdd.orienter("045", "080", ser)
+fdd.avancer("0375", "080", ser)
+
+fdd.orienter("000", "080", ser)
+fdd.rejoindre("2775", "1825", "1", "100", ser)
+fdd.orienter("000", "080", ser)
+# #bras a ouver paneau solaire
+# #bras b ouver
+fdd.rejoindre("1100", "1780", "0", "050", ser)
+# #bars all fermer 
+fdd.cibler("2650", "1750",  "050", ser)
+fdd.rejoindre("2650", "1750", "1", "100", ser)

@@ -1,0 +1,16 @@
+
+
+
+fdd.reculer("0200","030",ser)
+
+
+fdd.avancer("0400","100",ser)
+
+fdd.orienter("000","050",ser)
+
+fdd.cibler("2500","2000","030",ser)
+
+fdd.rejoindre("2050","1000","1","100",ser)
+
+
+
