@@ -61,7 +61,8 @@ robot_ennemi = RobotEnnemi(
  lbl_max_speed, lbl_accel, lbl_max_turning_speed, lbl_turning_accel,
  lbl_file, ent_file, btn_apply, btn_start, btn_enregistrer,
  lbl_rec_file, ent_rec_file, btn_valid, lbl_mouse_coords, lbl_mouse_mm_valid,
- btn_stop, btn_pause, btn_face, btn_vitesse, btn_fonction
+ btn_stop, btn_pause, btn_face, btn_vitesse, btn_fonction,
+ lbl_robot_coords, lbl_chrono
  ) = create_sidebar(manager, robot, enregistrement)
 
 
@@ -188,6 +189,12 @@ while running:
     pygame.draw.rect(screen, (60, 60, 60),
                      pygame.Rect(0, 0, Screen_WIDTH - UI_W, Screen_HEIGHT))
 
+    # ── Mise à jour sidebar : coords robot + chrono ─────────
+    state_color_str = "⚠" if robot.state == "BLOCKED" else ""
+    lbl_robot_coords.set_text(
+        f"{state_color_str} X:{int(robot.mm_x)} Y:{int(robot.mm_y)} O:{int(robot.angle)}°  [{robot.state}]")
+    lbl_chrono.set_text(f"Temps: {int(robot.graphique.strategy_elapsed_time)}s" if robot.graphique else "Temps: 0s")
+
     # ── Chrono ──────────────────────────────────────────────
     current_time = pygame.time.get_ticks() / 1000.0
     if robot.graphique:
@@ -235,13 +242,13 @@ while running:
         txt = font_alert.render(f"⚠ Adversaire à {int(dist)} mm", True, (255, 80, 80))
         screen.blit(txt, (10, FIELD_HEIGHT - 30))
 
-    # 4. HUD du robot allié (position, état, chrono)
-    if robot.graphique:
-        robot.graphique.draw_hud()
-
-    # 5. UI sidebar
+    # 4. UI sidebar
     manager.update(dt)
     manager.draw_ui(screen)
+
+    # 5. HUD par-dessus la sidebar (après draw_ui pour ne pas être écrasé)
+    if robot.graphique:
+        robot.graphique.draw_hud()
 
     pygame.display.update()
 
