@@ -101,12 +101,6 @@ def create_sidebar(manager,robot, enregistrement):
 
     btn_fonction = UIButton(relative_rect=pygame.Rect(10, y_btn_line_4, btn_width_4, 36), text="Fonction: Rejoindre", manager=manager, container=ui_panel)
 
-        # Position et état du robot
-    lbl_robot_coords = UILabel(relative_rect=pygame.Rect(10, 415, UI_W-20, 25), text="X:0 Y:0 O:0°", manager=manager, container=ui_panel)
-
-        # Chronomètre
-    lbl_chrono = UILabel(relative_rect=pygame.Rect(10, 440, UI_W-20, 25), text="Temps: 0s", manager=manager, container=ui_panel)
-
         # label mouse
     lbl_mouse_coords = UILabel(relative_rect=pygame.Rect(10, 530, UI_W-20, 30),text="Souris terrain: X=0 mm, Y=0 mm",manager=manager,container=ui_panel)
     lbl_mouse_mm_valid = UILabel(relative_rect=pygame.Rect(10, 470, UI_W-20, 30),text="Value mm: X=0 mm, Y=0 mm",manager=manager,container=ui_panel)
@@ -116,5 +110,4 @@ def create_sidebar(manager,robot, enregistrement):
             lbl_max_speed, lbl_accel, lbl_max_turning_speed, lbl_turning_accel,
             lbl_file, ent_file, btn_apply, btn_start, btn_enregistrer,
             lbl_rec_file, ent_rec_file, btn_valid, lbl_mouse_coords, lbl_mouse_mm_valid,
-            btn_stop, btn_pause, btn_face, btn_vitesse, btn_fonction,
-            lbl_robot_coords, lbl_chrono)
+            btn_stop, btn_pause, btn_face, btn_vitesse, btn_fonction)

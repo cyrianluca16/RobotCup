@@ -61,8 +61,7 @@ robot_ennemi = RobotEnnemi(
  lbl_max_speed, lbl_accel, lbl_max_turning_speed, lbl_turning_accel,
  lbl_file, ent_file, btn_apply, btn_start, btn_enregistrer,
  lbl_rec_file, ent_rec_file, btn_valid, lbl_mouse_coords, lbl_mouse_mm_valid,
- btn_stop, btn_pause, btn_face, btn_vitesse, btn_fonction,
- lbl_robot_coords, lbl_chrono
+ btn_stop, btn_pause, btn_face, btn_vitesse, btn_fonction
  ) = create_sidebar(manager, robot, enregistrement)
 
 
@@ -188,12 +187,6 @@ while running:
     # ── Fond ────────────────────────────────────────────────
     pygame.draw.rect(screen, (60, 60, 60),
                      pygame.Rect(0, 0, Screen_WIDTH - UI_W, Screen_HEIGHT))
-
-    # ── Mise à jour sidebar : coords robot + chrono ─────────
-    state_color_str = "⚠" if robot.state == "BLOCKED" else ""
-    lbl_robot_coords.set_text(
-        f"{state_color_str} X:{int(robot.mm_x)} Y:{int(robot.mm_y)} O:{int(robot.angle)}°  [{robot.state}]")
-    lbl_chrono.set_text(f"Temps: {int(robot.graphique.strategy_elapsed_time)}s" if robot.graphique else "Temps: 0s")
 
     # ── Chrono ──────────────────────────────────────────────
     current_time = pygame.time.get_ticks() / 1000.0
