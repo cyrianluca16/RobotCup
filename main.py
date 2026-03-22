@@ -25,6 +25,7 @@ pause_strat     = False
 running         = True
 strategy_start_time = 0
 mouse_mm_x_valid, mouse_mm_y_valid = 0, 0
+last_rec_path = None  # garde le chemin du dernier fichier enregistré
 
 # ── Init pygame + assets ────────────────────────────────────
 screen, scaled_vinyle, manager = init()
@@ -116,19 +117,28 @@ while running:
                     file_rec_path = ent_rec_file.get_text()
                     btn_enregistrer.set_text('Enregistrement ON')
                     file_rec_path = create_txt_file(file_rec_path)
+                    print(f"Enregistrement démarré : {file_rec_path}")
                 else:
+                    last_rec_path = file_rec_path  # sauvegarde le fichier créé
                     btn_enregistrer.set_text('Enregistrement OFF')
+                    ent_rec_file.set_text('rec.txt')
+                    print(f"Enregistrement arrêté : {last_rec_path}")
 
-            # Validation (clic sur la carte)
+            # Validation : remet le robot à sa position initiale et rejoue le fichier
             elif event.ui_element == btn_valid:
-                if fonction_robot == "rejoindre":
-                    write_rejoindre_command(mouse_mm_x_valid, mouse_mm_y_valid,
-                                            file_rec_path, str(face_robot), str(vitesse_robot))
-                    robot.rejoindre(mouse_mm_x_valid, mouse_mm_y_valid, face_robot, vitesse_robot)
-                elif fonction_robot == "orienter":
-                    write_orienter_command(robot.angle, file_rec_path, str(vitesse_robot))
-                    target_angle = robot.calculate_target_angle(mouse_mm_x_valid, mouse_mm_y_valid)
-                    robot.orienter(target_angle, vitesse_robot)
+                try:
+                    path_to_play = last_rec_path if last_rec_path else file_rec_path
+                    commands = parse_fdd_commands(path_to_play)
+                    robot.mm_x  = parse_number(ent_x.get_text(), robot.mm_x)
+                    robot.mm_y  = parse_number(ent_y.get_text(), robot.mm_y)
+                    robot.angle = parse_number(ent_o.get_text(), robot.angle)
+                    robot.state = IDLE
+                    robot._command_queue = []
+                    start_strat = True
+                    strategy_start_time = pygame.time.get_ticks() / 1000.0
+                    print(f"Exécution : {path_to_play}")
+                except Exception as e:
+                    print(f"Erreur : {e}")
 
             # Stop
             elif event.ui_element == btn_stop:
@@ -173,15 +183,25 @@ while running:
         # Enregistrement : clic souris sur la carte
         if enregistrement:
             lbl_mouse_mm_valid.set_text(f"value: X={mouse_mm_x_valid} mm, Y={mouse_mm_y_valid} mm")
-            if event.type == pygame.MOUSEBUTTONDOWN and mouse_mm_x > 0:
-                mouse_mm_x_valid = mouse_mm_x
-                mouse_mm_y_valid = mouse_mm_y
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = pygame.mouse.get_pos()
+                if mouse_mm_x > 0 and mx < (Screen_WIDTH - UI_W):
+                    mouse_mm_x_valid = mouse_mm_x
+                    mouse_mm_y_valid = mouse_mm_y
+                    if fonction_robot == "rejoindre":
+                        write_rejoindre_command(mouse_mm_x_valid, mouse_mm_y_valid,
+                                                file_rec_path, str(face_robot), str(vitesse_robot))
+                    elif fonction_robot == "orienter":
+                        write_orienter_command(robot.angle, file_rec_path, str(vitesse_robot))
+                    robot.rejoindre(mouse_mm_x_valid, mouse_mm_y_valid, face_robot, vitesse_robot)
         else:
             lbl_mouse_mm_valid.set_text("")
 
         # Clic libre → rejoindre direct
         if (not enregistrement and not start_strat
-                and event.type == pygame.MOUSEBUTTONDOWN and mouse_mm_x > 0):
+                and event.type == pygame.MOUSEBUTTONDOWN
+                and mouse_mm_x > 0
+                and pygame.mouse.get_pos()[0] < (Screen_WIDTH - UI_W)):
             robot.rejoindre(mouse_mm_x, mouse_mm_y, 0, 100)
 
     # ── Fond ────────────────────────────────────────────────
