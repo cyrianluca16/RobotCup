@@ -22,13 +22,13 @@ Launch the main simulation environment:
 ```bash
 python main.py
 ```
--**Manual Navigation**: With recording OFF, click anywhere on the field to make the robot reach that point.
--**Strategy Execution**: Load a .txt file via the sidebar and press Start Strategy.
--**Recording**: Enable "Recording Mode", click points on the field, and save your custom path.
+- **Manual Navigation**: With recording OFF, click anywhere on the field to make the robot reach that point.
+- **Strategy Execution**: Load a .txt file via the sidebar and press Start Strategy.
+- **Recording**: Enable "Recording Mode", click points on the field, and save your custom path.
 
 ## Project Architecture
--**main.py**: Main application controller and event loop.
--**robot.py**: Core logic (FSM, physics, and collision avoidance).
--**setup.py**: Environment configuration and asset management.
+- **main.py**: Main application controller and event loop.
+- **robot.py**: Core logic (FSM, physics, and collision avoidance).
+- **setup.py**: Environment configuration and asset management.
 -**read_strat_file.py**: Parser for the strategy command system.
 -**side_bare.py**: UI components and input handling.
