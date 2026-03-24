@@ -13,20 +13,22 @@ This project is a mobile robot simulator developed in Python using **Pygame**. I
 
 1. Ensure you have Python 3.x installed.
 2. Install the required dependencies:
-   ```bash
-   pip install -r requirements.txt
+```bash
+pip install -r requirements.txt
+```
 
 ## How to Use
-Run the main simulation:
-   ```bash
-   python main.py
+Launch the main simulation environment:
+```bash
+python main.py
 ```
-Left Click on Table: Sets a target for the robot (rejoindre mode).
-Sidebar Controls: Use the UI to load strategy files, start recording, or adjust robot performance on the fly.
+-**Manual Navigation**: With recording OFF, click anywhere on the field to make the robot reach that point.
+-**Strategy Execution**: Load a .txt file via the sidebar and press Start Strategy.
+-**Recording**: Enable "Recording Mode", click points on the field, and save your custom path.
 
-## Project Structure
-main.py: Main application loop and event handling.
-robot.py: Robot state machine logic, coordinate transformations, and physics.
-setup.py: Display configuration and asset management.
-read_strat_file.py: Parser for pre-programmed motion files.
-side_bare.py: UI management and parameter input fields.
+## Project Architecture
+-**main.py**: Main application controller and event loop.
+-**robot.py**: Core logic (FSM, physics, and collision avoidance).
+-**setup.py**: Environment configuration and asset management.
+-**read_strat_file.py**: Parser for the strategy command system.
+-**side_bare.py**: UI components and input handling.
