@@ -30,5 +30,5 @@ python main.py
 - **main.py**: Main application controller and event loop.
 - **robot.py**: Core logic (FSM, physics, and collision avoidance).
 - **setup.py**: Environment configuration and asset management.
--**read_strat_file.py**: Parser for the strategy command system.
--**side_bare.py**: UI components and input handling.
+- **read_strat_file.py**: Parser for the strategy command system.
+- **side_bare.py**: UI components and input handling.
