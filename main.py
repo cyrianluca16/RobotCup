@@ -9,11 +9,11 @@ from read_strat_file import strategie, parse_fdd_commands
 from rec_strat import (write_rejoindre_command, write_orienter_command,
                        create_txt_file, display_mouse_coords)
 
-# ── Chemins par défaut ──────────────────────────────────────
+# Chemins par défaut
 file_strat_path = 'test.txt'
 file_rec_path   = 'rec.txt'
 
-# ── État global de l'UI ─────────────────────────────────────
+# État global de l'UI
 face_robot     = 0
 vitesse_robot  = 100
 fonction_robot = "rejoindre"
@@ -27,16 +27,16 @@ strategy_start_time = 0
 mouse_mm_x_valid, mouse_mm_y_valid = 0, 0
 last_rec_path = None  # garde le chemin du dernier fichier enregistré
 
-# ── Init pygame + assets ────────────────────────────────────
+# Init pygame + assets 
 screen, scaled_vinyle, manager = init()
 clock = pygame.time.Clock()
 
 image_robot, rect_robot = create_robot_surface()
 
-# ── Robot allié (vert) ──────────────────────────────────────
+# Robot allié (vert) 
 robot = Robot(scaled_vinyle, screen, image_robot)
 
-# ── Robot ennemi (rouge) avec patrouille ────────────────────
+# Robot ennemi (rouge) avec patrouille
 image_ennemi = pygame.Surface(image_robot.get_size())
 image_ennemi.fill((220, 30, 30))
 image_ennemi.set_colorkey((0, 0, 0))
@@ -56,7 +56,7 @@ robot_ennemi = RobotEnnemi(
     patrol_speed=70,
 )
 
-# ── Sidebar ─────────────────────────────────────────────────
+# Sidebar 
 (ui_panel, lbl_init, ent_x, ent_y, ent_o, lbl_x, lbl_y, lbl_o,
  lbl_speed, ent_max_speed, ent_accel, ent_max_turning_speed, ent_turning_accel,
  lbl_max_speed, lbl_accel, lbl_max_turning_speed, lbl_turning_accel,
@@ -65,14 +65,11 @@ robot_ennemi = RobotEnnemi(
  btn_stop, btn_pause, btn_face, btn_vitesse, btn_fonction
  ) = create_sidebar(manager, robot, enregistrement)
 
-
-# ════════════════════════════════════════════════════════════
 #  Boucle principale
-# ════════════════════════════════════════════════════════════
 while running:
     dt = clock.tick(FPS) / 1000.0   # secondes
 
-    # ── Événements ──────────────────────────────────────────
+    # Événements 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -204,18 +201,18 @@ while running:
                 and pygame.mouse.get_pos()[0] < (Screen_WIDTH - UI_W)):
             robot.rejoindre(mouse_mm_x, mouse_mm_y, 0, 100)
 
-    # ── Fond ────────────────────────────────────────────────
+    # Fond 
     pygame.draw.rect(screen, (60, 60, 60),
                      pygame.Rect(0, 0, Screen_WIDTH - UI_W, Screen_HEIGHT))
 
-    # ── Chrono ──────────────────────────────────────────────
+    # Chrono
     current_time = pygame.time.get_ticks() / 1000.0
     if robot.graphique:
         robot.graphique.update_strategy_time(
             current_time if strategy_start_time > 0 else 0,
             start_strat and not pause_strat)
 
-    # ── Stratégie : passe la prochaine commande si le robot est IDLE ────
+    # Stratégie : passe la prochaine commande si le robot est IDLE
     if start_strat and not pause_strat:
         if robot.is_idle():
             strategie(robot, start_strat, commands)
@@ -223,18 +220,19 @@ while running:
                 start_strat = False
                 print("Stratégie terminée !")
 
-    # ── Mise à jour physique ─────────────────────────────────
+    # Mise à jour physique 
     # L'ennemi peut gêner l'allié, mais pas l'inverse (simplification)
     if not pause_strat:
+        robot.adapter_vitesse(robot_ennemi, angle_vision=150, distance_securite=400)
         robot.update(dt, obstacles=[robot_ennemi])
 
     robot_ennemi.update(dt, obstacles=None)   # l'ennemi ne s'arrête pas
 
-    # ── Calcul distance pour affichage alerte ───────────────
+    # Calcul distance pour affichage alerte 
     dist = math.hypot(robot.mm_x - robot_ennemi.mm_x,
                       robot.mm_y - robot_ennemi.mm_y)
 
-    # ── Rendu unique (UN seul blit du fond par frame) ────────
+    # Rendu unique (UN seul blit du fond par frame)
     # 1. Fond
     if robot.graphique:
         robot.graphique.draw_background()
@@ -252,7 +250,7 @@ while running:
         radius_px  = int((COLLISION_DISTANCE / 3000) * FIELD_WIDTH)
         pygame.draw.circle(screen, (255, 80, 80), (alert_px_x, alert_px_y), radius_px, 2)
         font_alert = pygame.font.Font(None, 22)
-        txt = font_alert.render(f"⚠ Adversaire à {int(dist)} mm", True, (255, 80, 80))
+        txt = font_alert.render(f"Adversaire à {int(dist)} mm", True, (255, 80, 80))
         screen.blit(txt, (10, FIELD_HEIGHT - 30))
 
     # 4. UI sidebar
