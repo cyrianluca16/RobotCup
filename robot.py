@@ -28,6 +28,7 @@ IDLE      = "IDLE"
 ROTATING  = "ROTATING"
 MOVING    = "MOVING"
 BLOCKED   = "BLOCKED"   # collision détectée, robot en attente
+STUNNED = "STUNNED"
 
 
 def create_robot_surface():
@@ -289,6 +290,13 @@ class Robot(Graphique):
         self.speed            = 0
         self.state            = MOVING
 
+    def rebond(self, distance, ratio_vitesse):
+        self._effective_speed = self.max_speed * (ratio_vitesse / 100)
+        self._target_distance = float(distance)
+        self._face            = 1
+        self.speed            = 0
+        self.state            = STUNNED
+
     def orienter(self, angle, ratio_vitesse):
         self._effective_speed = self.max_speed * (ratio_vitesse / 100)
         self._target_angle    = float(angle)
@@ -328,7 +336,7 @@ class Robot(Graphique):
             closest = self._closest_obstacle(obstacles)
             if closest is not None and closest < COLLISION_DISTANCE:
                 if self.state == MOVING:
-                    self.state = BLOCKED
+                    self.state = STUNNED
                     self._blocked_timer = 0.0
             else:
                 if self.state == BLOCKED:
@@ -347,6 +355,12 @@ class Robot(Graphique):
         if self.state == ROTATING:
             done = self._step_rotation(dt)
             if done:
+                self._exec_next_command()
+
+        if self.state == STUNNED:
+            done = self._step_translation(dt)
+            if done:
+                self.speed = 0
                 self._exec_next_command()
 
         elif self.state == MOVING:
@@ -401,7 +415,36 @@ class RobotEnnemi(Robot):
 
     def update(self, dt, obstacles=None):
         """Met à jour la patrouille : quand IDLE, passe au waypoint suivant."""
-        super().update(dt, obstacles)
+        if obstacles:
+            closest = self._closest_obstacle(obstacles)
+            if closest is not None and closest < COLLISION_DISTANCE:
+                if self.state == MOVING:
+                    self.state = BLOCKED
+                    self._blocked_timer = 0.0
+            else:
+                if self.state == BLOCKED:
+                    # Reprendre le mouvement dès que la voie est libre
+                    self.state = MOVING
+
+
+        # ── Exécution de l'état courant ────────────
         if self.state == IDLE:
             self._wp_index = (self._wp_index + 1) % len(self._waypoints)
             self._go_to_next_wp()
+
+        if self.state == BLOCKED:
+            self._blocked_timer += dt
+            self.speed = 0
+            return
+
+        if self.state == ROTATING:
+            done = self._step_rotation(dt)
+            if done:
+                self._exec_next_command()
+
+        elif self.state == MOVING:
+            done = self._step_translation(dt)
+            if done:
+                self.speed = 0
+                self._exec_next_command()
+        

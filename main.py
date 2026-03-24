@@ -211,11 +211,10 @@ while running:
                 print("Stratégie terminée !")
 
     # ── Mise à jour physique ─────────────────────────────────
-    # L'ennemi peut gêner l'allié, mais pas l'inverse (simplification)
     if not pause_strat:
         robot.update(dt, obstacles=[robot_ennemi])
 
-    robot_ennemi.update(dt, obstacles=None)   # l'ennemi ne s'arrête pas
+    robot_ennemi.update(dt, obstacles=[robot])  
 
     # ── Calcul distance pour affichage alerte ───────────────
     dist = math.hypot(robot.mm_x - robot_ennemi.mm_x,
