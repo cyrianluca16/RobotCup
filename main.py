@@ -226,9 +226,9 @@ while running:
         robot.graphique.draw_robot()
 
     # 3. Cercle d'alerte collision
-    if dist < COLLISION_DISTANCE:
-        alert_px_x = int(robot.conversion_From_mmx_To_px_x(robot.mm_x))
-        alert_px_y = int(robot.conversion_From_mmy_To_px_y(robot.mm_y))
+    if dist <= COLLISION_DISTANCE:
+        alert_px_x = int(robot.conversion_From_mmx_To_px_x(robot.mm_x)) 
+        alert_px_y = int(robot.conversion_From_mmy_To_px_y(robot.mm_y)) 
         radius_px  = int((COLLISION_DISTANCE / 3000) * FIELD_WIDTH)
         pygame.draw.circle(screen, (255, 80, 80), (alert_px_x, alert_px_y), radius_px, 2)
         font_alert = pygame.font.Font(None, 22)

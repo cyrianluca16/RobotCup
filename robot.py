@@ -17,7 +17,7 @@ max_turning_accel = 300
 
 ROTATION_THRESHOLD = 1   # degrés
 DISTANCE_THRESHOLD = 5   # mm
-COLLISION_DISTANCE = 400 # mm — distance d'alerte/arrêt
+COLLISION_DISTANCE = 600 # mm — distance d'alerte/arrêt
 
 FPS = 60
 
@@ -394,9 +394,7 @@ class Robot(Graphique):
 
         # Paliers discrets — légers pour la Raspberry
         if dans_cone_danger:
-            if distance < distance_securite * 0.4:      # < 400mm : stop
-                self._effective_speed = 0
-            elif distance < distance_securite:    # < 1000mm : 50%
+            if distance < distance_securite:    # < 1000mm : 50%
                 self._effective_speed = max_speed_mm_s * 0.5
         else:
             self._effective_speed = max_speed_mm_s       # voie libre : vitesse max
