@@ -21,7 +21,9 @@ COLLISION_DISTANCE = 400 # mm — distance d'alerte/arrêt
 
 FPS = 60
 
+# ──────────────────────────────────────────────
 #  États de la machine à états du robot
+# ──────────────────────────────────────────────
 IDLE      = "IDLE"
 ROTATING  = "ROTATING"
 MOVING    = "MOVING"
@@ -43,7 +45,10 @@ def create_robot_surface():
     rect_robot.center = (px_x, px_y)
     return image_robot, rect_robot
 
-#  Classe Graphique 
+
+# ──────────────────────────────────────────────
+#  Classe Graphique (inchangée)
+# ──────────────────────────────────────────────
 class Graphique:
     def __init__(self, robot, image_robot, screen, scaled_vinyle):
         self.robot = robot
@@ -98,7 +103,9 @@ class Graphique:
         pygame.display.update()
 
 
+# ──────────────────────────────────────────────
 #  Classe Robot — machine à états non bloquante
+# ──────────────────────────────────────────────
 class Robot(Graphique):
 
     def __init__(self, scaled_vinyle=None, screen=None, image_robot=None,
@@ -125,7 +132,7 @@ class Robot(Graphique):
         self.px_width  = (ROBOT_WIDTH_MM  / TABLE_WIDTH_MM)  * FIELD_WIDTH
         self.px_height = (ROBOT_HEIGHT_MM / TABLE_HEIGHT_MM) * FIELD_HEIGHT
 
-        # Machine à états
+        # ── Machine à états ──
         self.state = IDLE          # état courant
         self._blocked_timer = 0.0  # temps passé en BLOCKED
 
@@ -153,7 +160,7 @@ class Robot(Graphique):
             self.graphique = None
             print("erreur, missing arg: image ou screen")
 
-    # Conversions coordonnées 
+    # ── Conversions coordonnées ─────────────────
     def conversion_From_mmx_To_px_x(self, mm_x):
         return ((TABLE_WIDTH_MM - mm_x) / TABLE_WIDTH_MM) * FIELD_WIDTH
 
@@ -169,7 +176,7 @@ class Robot(Graphique):
     def conversion_trigo_transform_rotate(self, angle):
         return angle - 90
 
-    # Utilitaires angulaires 
+    # ── Utilitaires angulaires ──────────────────
     def normalize_angle(self, angle):
         angle = angle % 360
         if angle > 180:
@@ -187,7 +194,7 @@ class Robot(Graphique):
             self.angle_to_target - self.angle)
         return self.angle_to_target
 
-    # Profils trapézoïdaux
+    # ── Profils trapézoïdaux ────────────────────
     def _update_speed_trapezoidal(self, dt, distance_restante):
         v_max = self._effective_speed
         a     = self.acceleration
@@ -227,7 +234,7 @@ class Robot(Graphique):
         if abs(angle_diff_restante) < ROTATION_THRESHOLD:
             self.turning_speed = 0
 
-    # Étapes de déplacement (une frame) 
+    # ── Étapes de déplacement (une frame) ───────
     def _step_rotation(self, dt):
         """Tourne d'un pas vers _target_angle. Retourne True si terminé."""
         self.angle_diff_to_target = self.normalize_angle(
@@ -267,7 +274,7 @@ class Robot(Graphique):
 
         return self._target_distance <= DISTANCE_THRESHOLD
 
-    # API publique : commandes non bloquantes 
+    # ── API publique : commandes non bloquantes ─
     def avancer(self, distance, ratio_vitesse):
         self._effective_speed = self.max_speed * (ratio_vitesse / 100)
         self._target_distance = float(distance)
@@ -310,13 +317,13 @@ class Robot(Graphique):
     def is_idle(self):
         return self.state == IDLE
 
-    # Mise à jour par frame 
+    # ── Mise à jour par frame ───────────────────
     def update(self, dt, obstacles=None):
         """
         Appeler une fois par frame depuis la boucle principale.
         obstacles : liste de Robot (ou objets avec .mm_x, .mm_y) à éviter.
         """
-        # Détection de collision 
+        # ── Détection de collision ─────────────────
         if obstacles:
             closest = self._closest_obstacle(obstacles)
             if closest is not None and closest < COLLISION_DISTANCE:
@@ -328,7 +335,7 @@ class Robot(Graphique):
                     # Reprendre le mouvement dès que la voie est libre
                     self.state = MOVING
 
-        # Exécution de l'état courant 
+        # ── Exécution de l'état courant ────────────
         if self.state == IDLE:
             return
 
@@ -364,37 +371,42 @@ class Robot(Graphique):
             if min_dist is None or d < min_dist:
                 min_dist = d
         return min_dist
-    
-    def adapter_vitesse(self, ennemi, angle_vision=150, distance_securite=400):
-    # Adapte la vitesse max selon la position de l'ennemi.
-    # angle_vision      : angle du cone "danger" devant le robot (en degrés)
-    # distance_securite : distance en mm en dessous de laquelle on ralentit
 
-    # --- Calcul de l'angle relatif ennemi/robot ---
+    def adapter_vitesse(self, ennemi, angle_vision=120, distance_securite=1000):
+        """
+        Adapte la vitesse EN TEMPS RÉEL selon la position de l'ennemi.
+        Agit sur _effective_speed, lu à chaque frame par _update_speed_trapezoidal.
+
+        angle_vision      : largeur du cône de danger devant le robot (degrés)
+        distance_securite : distance de référence pour les paliers (mm)
+        """
         dx = ennemi.mm_x - self.mm_x
         dy = ennemi.mm_y - self.mm_y
         distance = math.hypot(dx, dy)
 
-        angle_vers_ennemi = math.degrees(math.atan2(dy, -dx))  # repère du terrain
+        # Angle de l'ennemi dans le repère du terrain, puis relatif à l'orientation du robot
+        angle_vers_ennemi = math.degrees(math.atan2(dy, -dx))
         angle_relatif = abs(self.normalize_angle(angle_vers_ennemi - self.angle))
-    # angle_relatif : 0° = ennemi pile devant, 180° = ennemi pile derrière
+        # angle_relatif = 0°   → ennemi pile devant
+        # angle_relatif = 180° → ennemi pile derrière
 
         dans_cone_danger = angle_relatif < (angle_vision / 2)
 
-    # --- Paliers de vitesse ---
+        # Paliers discrets — légers pour la Raspberry
         if dans_cone_danger:
-            if distance < distance_securite * 0.5:       # très proche devant
-                self.max_speed = 0                        # stop
-            elif distance < distance_securite:            # proche devant
-                self.max_speed = max_speed_mm_s * 0.4    # 40%
-            else:                                         # loin devant
-                self.max_speed = max_speed_mm_s * 0.7    # 70%
+            if distance < distance_securite * 0.4:      # < 400mm : stop
+                self._effective_speed = 0
+            elif distance < distance_securite:    # < 1000mm : 50%
+                self._effective_speed = max_speed_mm_s * 0.5
         else:
-            self.max_speed = 1000                         # 1 m/s, voie libre
+            self._effective_speed = max_speed_mm_s       # voie libre : vitesse max
 
         return distance, angle_relatif, dans_cone_danger
 
+
+# ──────────────────────────────────────────────
 #  Robot ennemi avec patrouille
+# ──────────────────────────────────────────────
 class RobotEnnemi(Robot):
     """
     Robot ennemi autonome qui patrouille entre une liste de waypoints.

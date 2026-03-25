@@ -1,0 +1,4 @@
+fdd.rejoindre("1940", "0126", "0", "100", ser)
+fdd.rejoindre("2680", "0863", "0", "100", ser)
+fdd.rejoindre("1726", "1613", "0", "100", ser)
+fdd.rejoindre("0410", "0463", "0", "100", ser)
