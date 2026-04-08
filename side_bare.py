@@ -67,7 +67,7 @@ def create_sidebar(manager,robot, enregistrement):
     btn_width_1 = (UI_W - 30) // 2
     y_btn_line_1 = 170
     
-    btn_apply = UIButton(relative_rect=pygame.Rect(10, y_btn_line_1, btn_width_1, 36), text="Appliquer", manager=manager, container=ui_panel)
+    btn_apply = UIButton(relative_rect=pygame.Rect(10, y_btn_line_1, btn_width_1, 36), text="Réinitialiser", manager=manager, container=ui_panel)
     btn_start = UIButton(relative_rect=pygame.Rect(20 + btn_width_1, y_btn_line_1, btn_width_1, 36), text="Start", manager=manager, container=ui_panel)
 
         # Boutons Stop et Pause
@@ -101,13 +101,21 @@ def create_sidebar(manager,robot, enregistrement):
 
     btn_fonction = UIButton(relative_rect=pygame.Rect(10, y_btn_line_4, btn_width_4, 36), text="Fonction: Rejoindre", manager=manager, container=ui_panel)
 
+    # ── Bouton Match + Timer ─────────────────────────────────
+    btn_match = UIButton(relative_rect=pygame.Rect(10, 410, UI_W-20, 40),
+                         text="Lancer le Match (100s)", manager=manager, container=ui_panel)
+
+    lbl_timer = UILabel(relative_rect=pygame.Rect(10, 455, UI_W-20, 36),
+                        text="Match : --", manager=manager, container=ui_panel)
+
         # label mouse
     lbl_mouse_coords = UILabel(relative_rect=pygame.Rect(10, 530, UI_W-20, 30),text="Souris terrain: X=0 mm, Y=0 mm",manager=manager,container=ui_panel)
-    lbl_mouse_mm_valid = UILabel(relative_rect=pygame.Rect(10, 470, UI_W-20, 30),text="Value mm: X=0 mm, Y=0 mm",manager=manager,container=ui_panel)
+    lbl_mouse_mm_valid = UILabel(relative_rect=pygame.Rect(10, 495, UI_W-20, 30),text="Value mm: X=0 mm, Y=0 mm",manager=manager,container=ui_panel)
 
     return (ui_panel, lbl_init, ent_x, ent_y, ent_o, lbl_x, lbl_y, lbl_o,
             lbl_speed, ent_max_speed, ent_accel, ent_max_turning_speed, ent_turning_accel,
             lbl_max_speed, lbl_accel, lbl_max_turning_speed, lbl_turning_accel,
             lbl_file, ent_file, btn_apply, btn_start, btn_enregistrer,
             lbl_rec_file, ent_rec_file, btn_valid, lbl_mouse_coords, lbl_mouse_mm_valid,
-            btn_stop, btn_pause, btn_face, btn_vitesse, btn_fonction)
+            btn_stop, btn_pause, btn_face, btn_vitesse, btn_fonction,
+            btn_match, lbl_timer)
