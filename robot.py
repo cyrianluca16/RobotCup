@@ -90,11 +90,11 @@ class Graphique:
         coords_text = self.font.render(
             f"X: {int(self.robot.mm_x)} mm, Y: {int(self.robot.mm_y)} mm, O: {int(self.robot.angle)}°  [{self.robot.state}]",
             True, state_color)
-        self.screen.blit(coords_text, (910, 10))
+        self.screen.blit(coords_text, (10, 10))
 
         chrono_text  = self.chrono_font.render(f"{int(self.strategy_elapsed_time)}s", True, (255, 255, 0))
         chrono_width = chrono_text.get_width()
-        self.screen.blit(chrono_text, (1200 - chrono_width - 10, 10))
+        self.screen.blit(chrono_text, (FIELD_WIDTH - chrono_width - 10, 10))
 
     # Conservé pour compatibilité (ne redessine PAS le fond)
     def refesh_graphique(self):

@@ -5,7 +5,7 @@ import math
 from side_bare import create_sidebar, parse_number, UI_W
 from robot import Robot, RobotEnnemi, FPS, COLLISION_DISTANCE, IDLE, create_robot_surface
 from setup import init, Screen_WIDTH, Screen_HEIGHT, FIELD_WIDTH, FIELD_HEIGHT
-from read_strat_file import strategie, parse_fdd_commands
+from read_strat_file import strategie, parse_fdd_commands, parse_fdd_commands_symetrique
 from rec_strat import (write_rejoindre_command, write_orienter_command,
                        create_txt_file, display_mouse_coords)
 
@@ -70,8 +70,15 @@ robot_ennemi = RobotEnnemi(
  lbl_file, ent_file, btn_apply, btn_start, btn_enregistrer,
  lbl_rec_file, ent_rec_file, btn_valid, lbl_mouse_coords, lbl_mouse_mm_valid,
  btn_stop, btn_pause, btn_face, btn_vitesse, btn_fonction,
- btn_match, lbl_timer
+ btn_match, lbl_timer,
+ btn_ennemi_aleatoire, btn_ennemi_charger, ent_ennemi_file,
+ lbl_robot_pos
  ) = create_sidebar(manager, robot, enregistrement)
+
+# Mode du robot ennemi
+ennemi_mode     = "aleatoire"
+ennemi_commands = None
+start_ennemi_strat = False
 
 
 # ════════════════════════════════════════════════════════════
@@ -203,6 +210,36 @@ while running:
                     fonction_robot = "rejoindre"
                     btn_fonction.set_text("Fonction: Rejoindre")
 
+            # Robot ennemi : mode aléatoire
+            elif event.ui_element == btn_ennemi_aleatoire:
+                ennemi_mode = "aleatoire"
+                robot_ennemi.state = IDLE
+                robot_ennemi._command_queue = []
+                robot_ennemi.mm_x  = 2500
+                robot_ennemi.mm_y  = 1000
+                robot_ennemi.angle = 180
+                robot_ennemi.speed = 0
+                robot_ennemi._wp_index = 0
+                robot_ennemi._go_to_next_wp()
+                print("Ennemi : mode aléatoire")
+
+            # Robot ennemi : charger fichier txt
+            elif event.ui_element == btn_ennemi_charger:
+                ennemi_file = ent_ennemi_file.get_text()
+                try:
+                    ennemi_commands = parse_fdd_commands_symetrique(ennemi_file)
+                    ennemi_mode = "fichier"
+                    robot_ennemi.state = IDLE
+                    robot_ennemi._command_queue = []
+                    robot_ennemi.mm_x  = 2500
+                    robot_ennemi.mm_y  = 1000
+                    robot_ennemi.angle = 180
+                    robot_ennemi.speed = 0
+                    start_ennemi_strat = True
+                    print(f"Ennemi : fichier {ennemi_file} chargé (symétrique)")
+                except Exception as e:
+                    print(f"Erreur fichier ennemi : {e}")
+
             # Lancer le match
             elif event.ui_element == btn_match:
                 # Réinitialiser les robots à leur position initiale
@@ -212,12 +249,23 @@ while running:
                 robot.state = IDLE
                 robot._command_queue = []
                 robot.speed = 0
-                # Réinitialiser l'ennemi
+                # Réinitialiser l'ennemi selon son mode
                 robot_ennemi.mm_x  = 2500
                 robot_ennemi.mm_y  = 1000
                 robot_ennemi.angle = 180
-                robot_ennemi._wp_index = 0
-                robot_ennemi._go_to_next_wp()
+                robot_ennemi.speed = 0
+                robot_ennemi._command_queue = []
+                if ennemi_mode == "aleatoire":
+                    robot_ennemi._wp_index = 0
+                    robot_ennemi._go_to_next_wp()
+                else:
+                    try:
+                        ennemi_file = ent_ennemi_file.get_text()
+                        ennemi_commands = parse_fdd_commands_symetrique(ennemi_file)
+                        start_ennemi_strat = True
+                        print(f"Ennemi : rechargement symétrique {ennemi_file}")
+                    except Exception as e:
+                        print(f"Erreur rechargement fichier ennemi : {e}")
                 # Lancer le timer
                 match_running    = True
                 match_start_time = pygame.time.get_ticks() / 1000.0
@@ -251,6 +299,9 @@ while running:
                 and mouse_mm_x > 0
                 and pygame.mouse.get_pos()[0] < (Screen_WIDTH - UI_W)):
             robot.rejoindre(mouse_mm_x, mouse_mm_y, 0, 100)
+
+    # ── Mise à jour position robot dans sidebar ──────────────
+    lbl_robot_pos.set_text(f"X:{int(robot.mm_x)} Y:{int(robot.mm_y)} O:{int(robot.angle)}° [{robot.state}]")
 
     # ── Fond ────────────────────────────────────────────────
     pygame.draw.rect(screen, (60, 60, 60),
@@ -308,14 +359,25 @@ while running:
                 start_strat = False
                 print("Stratégie terminée !")
 
+    # ── Stratégie ennemi fichier ─────────────────────────────
+    if ennemi_mode == "fichier" and start_ennemi_strat and not pause_strat:
+        if robot_ennemi.is_idle():
+            strategie(robot_ennemi, True, ennemi_commands)
+            if not ennemi_commands:
+                start_ennemi_strat = False
+                print("Stratégie ennemi terminée !")
+
     # ── Mise à jour physique ─────────────────────────────────
-    # L'ennemi peut gêner l'allié, mais pas l'inverse (simplification)
     if not pause_strat and not match_end_freeze:
         robot.adapter_vitesse(robot_ennemi, angle_vision=120, distance_securite=1000)
         robot.update(dt, obstacles=[robot_ennemi])
 
     if not match_end_freeze:
-        robot_ennemi.update(dt, obstacles=None)   # l'ennemi ne s'arrête pas
+        if ennemi_mode == "aleatoire":
+            robot_ennemi.update(dt, obstacles=None)
+        else:
+            from robot import Robot as RobotBase
+            RobotBase.update(robot_ennemi, dt, obstacles=None)
 
     # ── Calcul distance pour affichage alerte ───────────────
     dist = math.hypot(robot.mm_x - robot_ennemi.mm_x,
@@ -346,9 +408,7 @@ while running:
     manager.update(dt)
     manager.draw_ui(screen)
 
-    # 5. HUD par-dessus la sidebar (après draw_ui pour ne pas être écrasé)
-    if robot.graphique:
-        robot.graphique.draw_hud()
+    # Position robot affichée dans la sidebar via lbl_robot_pos
 
     pygame.display.update()
 

@@ -43,7 +43,28 @@ def execute_fdd_commands(commands, robot_instance):
             print(f"Fonction {function_name} non reconnue ou non prise en charge.")
 
 
-def convert_angle_from_robot_to_simulation(angle):
+def parse_fdd_commands_symetrique(file_path, table_width_mm=3000):
+    """Lit un fichier de stratégie et inverse le X pour le robot adverse (symétrie gauche/droite)."""
+    commands = parse_fdd_commands(file_path)
+    symetric_commands = []
+    for function_name, args in commands:
+        new_args = list(args)
+        if function_name in ("rejoindre", "cibler"):
+            # args[0] = x, args[1] = y
+            try:
+                x = int(args[0])
+                new_args[0] = str(table_width_mm - x)
+            except ValueError:
+                pass
+        elif function_name == "orienter":
+            # Inverser l'angle par rapport à l'axe vertical (180 - angle)
+            try:
+                angle = int(args[0])
+                new_args[0] = str(int(180 - angle) % 360)
+            except ValueError:
+                pass
+        symetric_commands.append((function_name, new_args))
+    return symetric_commands
     """ l'emplacement du 0 degrés et du sens de rotation ne sont 
     pas les meme entre la simulations et la robot
     pour résoudre ce problème on modifie la valeur de l'angle pour quel
