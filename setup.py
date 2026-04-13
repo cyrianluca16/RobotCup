@@ -6,7 +6,7 @@ import sys
 # Constants for the table size in mm and image path
 TABLE_WIDTH_MM = 3000
 TABLE_HEIGHT_MM = 2000
-IMAGE_PATH = 'botikplaymat.jpg'  # Update this to your image path
+IMAGE_PATH = 'table_FINALE_1.0.jpg'  # Update this to your image path
 
 # Screen setup
 #il faut respecter la prortion 3/2 pour l'image du terrain

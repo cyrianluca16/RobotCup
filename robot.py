@@ -17,7 +17,7 @@ max_turning_accel = 300
 
 ROTATION_THRESHOLD = 1   # degrés
 DISTANCE_THRESHOLD = 5   # mm
-COLLISION_DISTANCE = 400 # mm — distance d'alerte/arrêt
+COLLISION_DISTANCE = 600 # mm — distance d'alerte/arrêt
 
 FPS = 60
 
@@ -385,6 +385,35 @@ class Robot(Graphique):
             if min_dist is None or d < min_dist:
                 min_dist = d
         return min_dist
+
+    def adapter_vitesse(self, ennemi, angle_vision=120, distance_securite=1000):
+        """
+        Adapte la vitesse EN TEMPS RÉEL selon la position de l'ennemi.
+        Agit sur _effective_speed, lu à chaque frame par _update_speed_trapezoidal.
+
+        angle_vision      : largeur du cône de danger devant le robot (degrés)
+        distance_securite : distance de référence pour les paliers (mm)
+        """
+        dx = ennemi.mm_x - self.mm_x
+        dy = ennemi.mm_y - self.mm_y
+        distance = math.hypot(dx, dy)
+
+        # Angle de l'ennemi dans le repère du terrain, puis relatif à l'orientation du robot
+        angle_vers_ennemi = math.degrees(math.atan2(dy, -dx))
+        angle_relatif = abs(self.normalize_angle(angle_vers_ennemi - self.angle))
+        # angle_relatif = 0°   → ennemi pile devant
+        # angle_relatif = 180° → ennemi pile derrière
+
+        dans_cone_danger = angle_relatif < (angle_vision / 2)
+
+        # Paliers discrets — légers pour la Raspberry
+        if dans_cone_danger:
+            if distance < distance_securite:    # < 1000mm : 50%
+                self._effective_speed = max_speed_mm_s * 0.5
+        else:
+            self._effective_speed = max_speed_mm_s       # voie libre : vitesse max
+
+        return distance, angle_relatif, dans_cone_danger
 
 
 # ──────────────────────────────────────────────

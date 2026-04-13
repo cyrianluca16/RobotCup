@@ -25,6 +25,14 @@ pause_strat     = False
 running         = True
 strategy_start_time = 0
 mouse_mm_x_valid, mouse_mm_y_valid = 0, 0
+last_rec_path = None  # garde le chemin du dernier fichier enregistré
+
+# ── Timer de match ───────────────────────────────────────────
+MATCH_DURATION   = 100.0   # secondes
+match_running    = False
+match_start_time = 0.0
+match_end_freeze = False   # True pendant les 3s de gel post-match
+match_freeze_timer = 0.0
 
 # ── Init pygame + assets ────────────────────────────────────
 screen, scaled_vinyle, manager = init()
@@ -62,7 +70,7 @@ robot_ennemi = RobotEnnemi(
  lbl_file, ent_file, btn_apply, btn_start, btn_enregistrer,
  lbl_rec_file, ent_rec_file, btn_valid, lbl_mouse_coords, lbl_mouse_mm_valid,
  btn_stop, btn_pause, btn_face, btn_vitesse, btn_fonction,
- lbl_robot_coords, lbl_chrono
+ btn_match, lbl_timer
  ) = create_sidebar(manager, robot, enregistrement)
 
 
@@ -87,17 +95,32 @@ while running:
 
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
 
-            # Appliquer paramètres
+            # Réinitialiser
             if event.ui_element == btn_apply:
+                # Paramètres robot allié
                 robot.mm_x        = parse_number(ent_x.get_text(), robot.mm_x)
                 robot.mm_y        = parse_number(ent_y.get_text(), robot.mm_y)
                 robot.angle       = parse_number(ent_o.get_text(), robot.angle)
-                file_strat_path   = ent_file.get_text()
                 robot.max_speed   = parse_number(ent_max_speed.get_text(), robot.max_speed)
                 robot.acceleration = parse_number(ent_accel.get_text(), robot.acceleration)
                 robot.max_turning_speed  = parse_number(ent_max_turning_speed.get_text(), robot.max_turning_speed)
                 robot.turning_acceleration = parse_number(ent_turning_accel.get_text(), robot.turning_acceleration)
-                print("Paramètres appliqués")
+                file_strat_path   = ent_file.get_text()
+                # Stopper tous les mouvements du robot allié
+                robot.state = IDLE
+                robot._command_queue = []
+                robot.speed = 0
+                start_strat = False
+                commands    = None
+                # Réinitialiser le robot ennemi à sa position de départ et relancer sa patrouille
+                robot_ennemi.mm_x  = 2500
+                robot_ennemi.mm_y  = 1000
+                robot_ennemi.angle = 180
+                robot_ennemi.speed = 0
+                robot_ennemi._command_queue = []
+                robot_ennemi._wp_index = 0
+                robot_ennemi._go_to_next_wp()
+                print("Réinitialisé")
 
             # Démarrer stratégie
             elif event.ui_element == btn_start:
@@ -117,19 +140,28 @@ while running:
                     file_rec_path = ent_rec_file.get_text()
                     btn_enregistrer.set_text('Enregistrement ON')
                     file_rec_path = create_txt_file(file_rec_path)
+                    write_rejoindre_command(robot.mm_x, robot.mm_y, file_rec_path, str(face_robot), str(vitesse_robot))
                 else:
+                    last_rec_path = file_rec_path  # sauvegarde le fichier créé
                     btn_enregistrer.set_text('Enregistrement OFF')
+                    ent_rec_file.set_text('rec.txt')
+                    print(f"Enregistrement arrêté : {last_rec_path}")
 
-            # Validation (clic sur la carte)
+            # Validation : remet le robot à sa position initiale et rejoue le fichier
             elif event.ui_element == btn_valid:
-                if fonction_robot == "rejoindre":
-                    write_rejoindre_command(mouse_mm_x_valid, mouse_mm_y_valid,
-                                            file_rec_path, str(face_robot), str(vitesse_robot))
-                    robot.rejoindre(mouse_mm_x_valid, mouse_mm_y_valid, face_robot, vitesse_robot)
-                elif fonction_robot == "orienter":
-                    write_orienter_command(robot.angle, file_rec_path, str(vitesse_robot))
-                    target_angle = robot.calculate_target_angle(mouse_mm_x_valid, mouse_mm_y_valid)
-                    robot.orienter(target_angle, vitesse_robot)
+                try:
+                    path_to_play = last_rec_path if last_rec_path else file_rec_path
+                    commands = parse_fdd_commands(path_to_play)
+                    robot.mm_x  = parse_number(ent_x.get_text(), robot.mm_x)
+                    robot.mm_y  = parse_number(ent_y.get_text(), robot.mm_y)
+                    robot.angle = parse_number(ent_o.get_text(), robot.angle)
+                    robot.state = IDLE
+                    robot._command_queue = []
+                    start_strat = True
+                    strategy_start_time = pygame.time.get_ticks() / 1000.0
+                    print(f"Exécution : {path_to_play}")
+                except Exception as e:
+                    print(f"Erreur : {e}")
 
             # Stop
             elif event.ui_element == btn_stop:
@@ -171,31 +203,97 @@ while running:
                     fonction_robot = "rejoindre"
                     btn_fonction.set_text("Fonction: Rejoindre")
 
+            # Lancer le match
+            elif event.ui_element == btn_match:
+                # Réinitialiser les robots à leur position initiale
+                robot.mm_x  = parse_number(ent_x.get_text(), robot.mm_x)
+                robot.mm_y  = parse_number(ent_y.get_text(), robot.mm_y)
+                robot.angle = parse_number(ent_o.get_text(), robot.angle)
+                robot.state = IDLE
+                robot._command_queue = []
+                robot.speed = 0
+                # Réinitialiser l'ennemi
+                robot_ennemi.mm_x  = 2500
+                robot_ennemi.mm_y  = 1000
+                robot_ennemi.angle = 180
+                robot_ennemi._wp_index = 0
+                robot_ennemi._go_to_next_wp()
+                # Lancer le timer
+                match_running    = True
+                match_start_time = pygame.time.get_ticks() / 1000.0
+                match_end_freeze = False
+                match_freeze_timer = 0.0
+                pause_strat = False
+                btn_pause.set_text("Pause")
+                lbl_timer.set_text("Match : 100s")
+                print("Match lancé !")
+
         # Enregistrement : clic souris sur la carte
         if enregistrement:
             lbl_mouse_mm_valid.set_text(f"value: X={mouse_mm_x_valid} mm, Y={mouse_mm_y_valid} mm")
-            if event.type == pygame.MOUSEBUTTONDOWN and mouse_mm_x > 0:
-                mouse_mm_x_valid = mouse_mm_x
-                mouse_mm_y_valid = mouse_mm_y
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = pygame.mouse.get_pos()
+                if mouse_mm_x > 0 and mx < (Screen_WIDTH - UI_W):
+                    mouse_mm_x_valid = mouse_mm_x
+                    mouse_mm_y_valid = mouse_mm_y
+                    if fonction_robot == "rejoindre":
+                        write_rejoindre_command(mouse_mm_x_valid, mouse_mm_y_valid,
+                                                file_rec_path, str(face_robot), str(vitesse_robot))
+                    elif fonction_robot == "orienter":
+                        write_orienter_command(robot.angle, file_rec_path, str(vitesse_robot))
+                    robot.rejoindre(mouse_mm_x_valid, mouse_mm_y_valid, face_robot, vitesse_robot)
         else:
             lbl_mouse_mm_valid.set_text("")
 
         # Clic libre → rejoindre direct
         if (not enregistrement and not start_strat
-                and event.type == pygame.MOUSEBUTTONDOWN and mouse_mm_x > 0):
+                and event.type == pygame.MOUSEBUTTONDOWN
+                and mouse_mm_x > 0
+                and pygame.mouse.get_pos()[0] < (Screen_WIDTH - UI_W)):
             robot.rejoindre(mouse_mm_x, mouse_mm_y, 0, 100)
 
     # ── Fond ────────────────────────────────────────────────
     pygame.draw.rect(screen, (60, 60, 60),
                      pygame.Rect(0, 0, Screen_WIDTH - UI_W, Screen_HEIGHT))
 
-    # ── Mise à jour sidebar : coords robot + chrono ─────────
-    state_color_str = "⚠" if robot.state == "BLOCKED" else ""
-    lbl_robot_coords.set_text(
-        f"{state_color_str} X:{int(robot.mm_x)} Y:{int(robot.mm_y)} O:{int(robot.angle)}°  [{robot.state}]")
-    lbl_chrono.set_text(f"Temps: {int(robot.graphique.strategy_elapsed_time)}s" if robot.graphique else "Temps: 0s")
+    # ── Timer de match ───────────────────────────────────────
+    if match_running:
+        elapsed      = (pygame.time.get_ticks() / 1000.0) - match_start_time
+        time_left    = max(0.0, MATCH_DURATION - elapsed)
+        lbl_timer.set_text(f"Match : {int(time_left)}s")
 
-    # ── Chrono ──────────────────────────────────────────────
+        if time_left <= 0 and not match_end_freeze:
+            # Fin du match : geler les robots 3 secondes
+            match_end_freeze   = True
+            match_freeze_timer = 0.0
+            robot.state        = IDLE
+            robot._command_queue = []
+            robot.speed        = 0
+            start_strat        = False
+            print("Match terminé ! Gel 3 secondes…")
+
+        if match_end_freeze:
+            match_freeze_timer += dt
+            lbl_timer.set_text(f"Fin du match ! ({int(3 - match_freeze_timer) + 1}s)")
+            if match_freeze_timer >= 3.0:
+                match_end_freeze = False
+                match_running    = False
+                lbl_timer.set_text("Match : --")
+                # Remettre les robots à leur position initiale
+                robot.mm_x  = parse_number(ent_x.get_text(), robot.mm_x)
+                robot.mm_y  = parse_number(ent_y.get_text(), robot.mm_y)
+                robot.angle = parse_number(ent_o.get_text(), robot.angle)
+                robot.state = IDLE
+                robot._command_queue = []
+                robot.speed = 0
+                robot_ennemi.mm_x  = 2500
+                robot_ennemi.mm_y  = 1000
+                robot_ennemi.angle = 180
+                robot_ennemi._wp_index = 0
+                robot_ennemi._go_to_next_wp()
+                print("Robots remis à la position initiale.")
+
+    # ── Chrono stratégie ────────────────────────────────────
     current_time = pygame.time.get_ticks() / 1000.0
     if robot.graphique:
         robot.graphique.update_strategy_time(
@@ -211,10 +309,20 @@ while running:
                 print("Stratégie terminée !")
 
     # ── Mise à jour physique ─────────────────────────────────
+<<<<<<< HEAD
     if not pause_strat:
         robot.update(dt, obstacles=[robot_ennemi])
 
     robot_ennemi.update(dt, obstacles=[robot])  
+=======
+    # L'ennemi peut gêner l'allié, mais pas l'inverse (simplification)
+    if not pause_strat and not match_end_freeze:
+        robot.adapter_vitesse(robot_ennemi, angle_vision=120, distance_securite=1000)
+        robot.update(dt, obstacles=[robot_ennemi])
+
+    if not match_end_freeze:
+        robot_ennemi.update(dt, obstacles=None)   # l'ennemi ne s'arrête pas
+>>>>>>> main
 
     # ── Calcul distance pour affichage alerte ───────────────
     dist = math.hypot(robot.mm_x - robot_ennemi.mm_x,
