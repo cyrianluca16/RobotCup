@@ -379,10 +379,10 @@ while running:
 
     if not match_end_freeze:
         if ennemi_mode == "aleatoire":
-            robot_ennemi.update(dt, obstacles=None)
+            robot_ennemi.update(dt, obstacles=[robot])
         else:
             from robot import Robot as RobotBase
-            RobotBase.update(robot_ennemi, dt, obstacles=None)
+            RobotBase.update(robot_ennemi, dt, obstacles=[robot])
 
     # ── Calcul distance pour affichage alerte ───────────────
     dist = math.hypot(robot.mm_x - robot_ennemi.mm_x,
