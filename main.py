@@ -27,6 +27,11 @@ strategy_start_time = 0
 mouse_mm_x_valid, mouse_mm_y_valid = 0, 0
 last_rec_path = None  # garde le chemin du dernier fichier enregistré
 
+# ── Mode robot ennemi ────────────────────────────────────────
+ennemi_mode        = "aleatoire"
+# ── Mode robot ennemi ────────────────────────────────────────
+ennemi_mode        = "aleatoire"
+
 # ── Timer de match ───────────────────────────────────────────
 MATCH_DURATION   = 100.0   # secondes
 match_running    = False
