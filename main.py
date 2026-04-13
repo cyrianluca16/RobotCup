@@ -309,20 +309,13 @@ while running:
                 print("Stratégie terminée !")
 
     # ── Mise à jour physique ─────────────────────────────────
-<<<<<<< HEAD
-    if not pause_strat:
-        robot.update(dt, obstacles=[robot_ennemi])
-
-    robot_ennemi.update(dt, obstacles=[robot])  
-=======
     # L'ennemi peut gêner l'allié, mais pas l'inverse (simplification)
     if not pause_strat and not match_end_freeze:
         robot.adapter_vitesse(robot_ennemi, angle_vision=120, distance_securite=1000)
         robot.update(dt, obstacles=[robot_ennemi])
 
     if not match_end_freeze:
-        robot_ennemi.update(dt, obstacles=None)   # l'ennemi ne s'arrête pas
->>>>>>> main
+        robot_ennemi.update(dt, obstacles=[robot])   # l'ennemi ne s'arrête pas
 
     # ── Calcul distance pour affichage alerte ───────────────
     dist = math.hypot(robot.mm_x - robot_ennemi.mm_x,
