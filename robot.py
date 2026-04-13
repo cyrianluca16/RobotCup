@@ -118,6 +118,9 @@ class Robot(Graphique):
         self.angle  = angle
         self.angle_px = angle - 90
 
+        self.old_x = x
+        self.old_y = y
+        
         # Physique
         self.speed              = speed
         self.max_speed          = max_speed_mm_s

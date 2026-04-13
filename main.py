@@ -8,10 +8,14 @@ from setup import init, Screen_WIDTH, Screen_HEIGHT, FIELD_WIDTH, FIELD_HEIGHT
 from read_strat_file import strategie, parse_fdd_commands
 from rec_strat import (write_rejoindre_command, write_orienter_command,
                        create_txt_file, display_mouse_coords)
+from obstacles import Obstacle
 
 # ── Chemins par défaut ──────────────────────────────────────
 file_strat_path = 'test.txt'
 file_rec_path   = 'rec.txt'
+
+# ── Obstacle ───────────────────────────────────────────────
+obstacle = Obstacle()
 
 # ── État global de l'UI ─────────────────────────────────────
 face_robot     = 0
@@ -315,7 +319,7 @@ while running:
         robot.update(dt, obstacles=[robot_ennemi])
 
     if not match_end_freeze:
-        robot_ennemi.update(dt, obstacles=[robot])   # l'ennemi ne s'arrête pas
+        robot_ennemi.update(dt, obstacles=[robot]) 
 
     # ── Calcul distance pour affichage alerte ───────────────
     dist = math.hypot(robot.mm_x - robot_ennemi.mm_x,
@@ -341,6 +345,8 @@ while running:
         font_alert = pygame.font.Font(None, 22)
         txt = font_alert.render(f"⚠ Adversaire à {int(dist)} mm", True, (255, 80, 80))
         screen.blit(txt, (10, FIELD_HEIGHT - 30))
+
+    obstacle.draw(screen, color=(255, 80, 0))
 
     # 4. UI sidebar
     manager.update(dt)
