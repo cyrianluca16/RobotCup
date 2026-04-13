@@ -157,6 +157,10 @@ class Robot(Graphique):
         self.distance_x_to_target  = 0
         self.distance_y_to_target  = 0
 
+        self._stun_retreat_mm   = 150   # distance de recul en mm
+        self._stun_target_x     = None  # cible à reprendre après recul
+        self._stun_target_y     = None
+
         # Graphique
         if image_robot and screen and scaled_vinyle:
             self.graphique = Graphique(self, image_robot, screen, scaled_vinyle)
@@ -339,12 +343,9 @@ class Robot(Graphique):
             closest = self._closest_obstacle(obstacles)
             if closest is not None and closest < COLLISION_DISTANCE:
                 if self.state == MOVING:
-                    self.state = STUNNED
-                    self._blocked_timer = 0.0
+                    self._start_stun()
             else:
-                if self.state == BLOCKED:
-                    # Reprendre le mouvement dès que la voie est libre
-                    self.state = MOVING
+                pass
 
         # ── Exécution de l'état courant ────────────
         if self.state == IDLE:
@@ -364,7 +365,7 @@ class Robot(Graphique):
             done = self._step_translation(dt)
             if done:
                 self.speed = 0
-                self._exec_next_command()
+                self.state = IDLE  
 
         elif self.state == MOVING:
             done = self._step_translation(dt)
@@ -392,6 +393,18 @@ class Robot(Graphique):
             if min_dist is None or d < min_dist:
                 min_dist = d
         return min_dist
+    
+    def _start_stun(self):
+        if self._command_queue:
+            # La dernière commande de la file est l'avancer/reculer vers la cible
+            self._stun_target_x = None  # sera recalculé via rejoindre si besoin
+            self._stun_target_y = None
+        self._command_queue = []
+        # Recule sur la direction opposée à l'angle actuel
+        self._face = 1   # forcer le recul
+        self._target_distance = self._stun_retreat_mm
+        self.speed = 0
+        self.state = STUNNED
 
     def adapter_vitesse(self, ennemi, angle_vision=120, distance_securite=1000):
         """
@@ -455,12 +468,9 @@ class RobotEnnemi(Robot):
             closest = self._closest_obstacle(obstacles)
             if closest is not None and closest < COLLISION_DISTANCE:
                 if self.state == MOVING:
-                    self.state = BLOCKED
-                    self._blocked_timer = 0.0
+                    self._start_stun()
             else:
-                if self.state == BLOCKED:
-                    # Reprendre le mouvement dès que la voie est libre
-                    self.state = MOVING
+                pass
 
 
         # ── Exécution de l'état courant ────────────
@@ -478,9 +488,17 @@ class RobotEnnemi(Robot):
             if done:
                 self._exec_next_command()
 
+        if self.state == STUNNED:
+            done = self._step_translation(dt)
+            if done:
+                self.speed = 0
+                self.state = IDLE 
+
         elif self.state == MOVING:
             done = self._step_translation(dt)
             if done:
                 self.speed = 0
                 self._exec_next_command()
+
+        
         
