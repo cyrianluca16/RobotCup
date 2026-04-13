@@ -316,7 +316,7 @@ while running:
     # L'ennemi peut gêner l'allié, mais pas l'inverse (simplification)
     if not pause_strat and not match_end_freeze:
         robot.adapter_vitesse(robot_ennemi, angle_vision=120, distance_securite=1000)
-        robot.update(dt, obstacles=[robot_ennemi])
+        robot.update(dt, obstacles=[robot_ennemi, obstacle])
 
     if not match_end_freeze:
         robot_ennemi.update(dt, obstacles=[robot]) 

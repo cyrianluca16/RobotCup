@@ -384,7 +384,11 @@ class Robot(Graphique):
         """Retourne la distance au plus proche obstacle, ou None."""
         min_dist = None
         for obs in obstacles:
-            d = math.hypot(self.mm_x - obs.mm_x, self.mm_y - obs.mm_y)
+            if hasattr(obs, 'distance_to_robot'):
+                d = obs.distance_to_robot(self.mm_x, self.mm_y)
+            else:
+                # Robot ennemi : distance centre à centre
+                d = math.hypot(self.mm_x - obs.mm_x, self.mm_y - obs.mm_y)
             if min_dist is None or d < min_dist:
                 min_dist = d
         return min_dist
