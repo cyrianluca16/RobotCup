@@ -9,6 +9,7 @@ from read_strat_file import strategie, parse_fdd_commands, parse_fdd_commands_sy
 from rec_strat import (write_rejoindre_command, write_orienter_command,
                        create_txt_file, display_mouse_coords)
 from obstacles import Obstacle
+from collectibles import Collectible
 
 # ── Chemins par défaut ──────────────────────────────────────
 file_strat_path = 'test.txt'
@@ -16,6 +17,8 @@ file_rec_path   = 'rec.txt'
 
 # ── Obstacle ───────────────────────────────────────────────
 obstacle = Obstacle()
+
+collectibles = [Collectible() for _ in range(5)]
 
 # ── État global de l'UI ─────────────────────────────────────
 face_robot = 0
@@ -404,6 +407,9 @@ while running:
 
     #Ligne à décommenter pour débug (affiche obstacle sur map)
     #obstacle.draw(screen, color=(255, 80, 0))
+
+    for collectible in collectibles:
+        collectible.draw(screen, color=(80, 255, 80))
 
     # 4. UI sidebar
     manager.update(dt)
