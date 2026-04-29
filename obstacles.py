@@ -33,3 +33,4 @@ class Obstacle:
     def draw(self, screen, color=(255, 80, 0)):
         rect = self.generate_obstacle()
         pygame.draw.rect(screen, color, rect)
+        

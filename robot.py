@@ -3,14 +3,14 @@ import pygame
 from setup import TABLE_WIDTH_MM, TABLE_HEIGHT_MM, FIELD_HEIGHT, FIELD_WIDTH
 
 # Robot specifications
-ROBOT_WIDTH_MM  = 320
+ROBOT_WIDTH_MM = 320
 ROBOT_HEIGHT_MM = 290
-init_x_mm   = 300
-init_y_mm   = 950
-init_angle  = 0
+init_x_mm = 300
+init_y_mm = 950
+init_angle = 0
 
 # Physique par défaut
-max_speed_mm_s  = 1000
+max_speed_mm_s = 1000
 max_accel_mm_s2 = 2000
 max_turning_speed = 500
 max_turning_accel = 300
@@ -21,18 +21,15 @@ COLLISION_DISTANCE = 600 # mm — distance d'alerte/arrêt
 
 FPS = 60
 
-# ──────────────────────────────────────────────
-#  États de la machine à états du robot
-# ──────────────────────────────────────────────
-IDLE      = "IDLE"
-ROTATING  = "ROTATING"
-MOVING    = "MOVING"
-BLOCKED   = "BLOCKED"   # collision détectée, robot en attente
+IDLE = "IDLE"
+ROTATING = "ROTATING"
+MOVING = "MOVING"
+BLOCKED = "BLOCKED" 
 STUNNED = "STUNNED"
 
 
 def create_robot_surface():
-    px_width  = (ROBOT_WIDTH_MM  / TABLE_WIDTH_MM)  * FIELD_WIDTH
+    px_width = (ROBOT_WIDTH_MM  / TABLE_WIDTH_MM)  * FIELD_WIDTH
     px_height = (ROBOT_HEIGHT_MM / TABLE_HEIGHT_MM) * FIELD_HEIGHT
     px_x = ((TABLE_WIDTH_MM - init_x_mm) / TABLE_WIDTH_MM) * FIELD_WIDTH
     px_y = ((TABLE_HEIGHT_MM - init_y_mm) / TABLE_HEIGHT_MM) * FIELD_HEIGHT
@@ -46,20 +43,16 @@ def create_robot_surface():
     rect_robot.center = (px_x, px_y)
     return image_robot, rect_robot
 
-
-# ──────────────────────────────────────────────
-#  Classe Graphique (inchangée)
-# ──────────────────────────────────────────────
 class Graphique:
     def __init__(self, robot, image_robot, screen, scaled_vinyle):
         self.robot = robot
         self.image_robot = image_robot
         self.screen = screen
-        self.font   = pygame.font.Font(None, 18)
+        self.font = pygame.font.Font(None, 18)
         self.chrono_font = pygame.font.Font(None, 24)
         self.scaled_vinyle = scaled_vinyle
-        self.strategy_start_time    = 0
-        self.strategy_elapsed_time  = 0
+        self.strategy_start_time = 0
+        self.strategy_elapsed_time = 0
 
     def update_strategy_time(self, current_time, strategy_active):
         if strategy_active and self.strategy_start_time == 0:
@@ -67,7 +60,7 @@ class Graphique:
         elif strategy_active and self.strategy_start_time > 0:
             self.strategy_elapsed_time = current_time - self.strategy_start_time
         elif not strategy_active:
-            self.strategy_start_time   = 0
+            self.strategy_start_time = 0
             self.strategy_elapsed_time = 0
 
     def draw_background(self):
@@ -78,11 +71,11 @@ class Graphique:
     def draw_robot(self):
         """Dessine uniquement ce robot par-dessus le fond déjà dessiné."""
         self.robot.angle_px = self.robot.conversion_trigo_transform_rotate(self.robot.angle)
-        self.robot.px_x     = self.robot.conversion_From_mmx_To_px_x(self.robot.mm_x)
-        self.robot.px_y     = self.robot.conversion_From_mmy_To_px_y(self.robot.mm_y)
+        self.robot.px_x = self.robot.conversion_From_mmx_To_px_x(self.robot.mm_x)
+        self.robot.px_y = self.robot.conversion_From_mmy_To_px_y(self.robot.mm_y)
 
         rotated_image = pygame.transform.rotate(self.image_robot, self.robot.angle_px)
-        robot_rect    = rotated_image.get_rect(center=(self.robot.px_x, self.robot.px_y))
+        robot_rect = rotated_image.get_rect(center=(self.robot.px_x, self.robot.px_y))
         self.screen.blit(rotated_image, robot_rect)
 
     def draw_hud(self):
@@ -93,7 +86,7 @@ class Graphique:
             True, state_color)
         self.screen.blit(coords_text, (10, 10))
 
-        chrono_text  = self.chrono_font.render(f"{int(self.strategy_elapsed_time)}s", True, (255, 255, 0))
+        chrono_text = self.chrono_font.render(f"{int(self.strategy_elapsed_time)}s", True, (255, 255, 0))
         chrono_width = chrono_text.get_width()
         self.screen.blit(chrono_text, (FIELD_WIDTH - chrono_width - 10, 10))
 
@@ -104,36 +97,32 @@ class Graphique:
         pygame.display.update()
 
 
-# ──────────────────────────────────────────────
-#  Classe Robot — machine à états non bloquante
-# ──────────────────────────────────────────────
 class Robot(Graphique):
-
     def __init__(self, scaled_vinyle=None, screen=None, image_robot=None,
                  x=init_x_mm, y=init_y_mm, angle=init_angle, speed=0):
-        self.mm_x   = x
-        self.mm_y   = y
-        self.px_x   = ((TABLE_WIDTH_MM - x)  / TABLE_WIDTH_MM)  * FIELD_WIDTH
-        self.px_y   = ((TABLE_HEIGHT_MM - y) / TABLE_HEIGHT_MM) * FIELD_HEIGHT
-        self.angle  = angle
+        self.mm_x = x
+        self.mm_y = y
+        self.px_x = ((TABLE_WIDTH_MM - x)  / TABLE_WIDTH_MM)  * FIELD_WIDTH
+        self.px_y = ((TABLE_HEIGHT_MM - y) / TABLE_HEIGHT_MM) * FIELD_HEIGHT
+        self.angle = angle
         self.angle_px = angle - 90
 
         self.old_x = x
         self.old_y = y
         
         # Physique
-        self.speed              = speed
-        self.max_speed          = max_speed_mm_s
-        self.acceleration       = max_accel_mm_s2
-        self.turning_speed      = 0
-        self.max_turning_speed  = max_turning_speed
+        self.speed = speed
+        self.max_speed = max_speed_mm_s
+        self.acceleration = max_accel_mm_s2
+        self.turning_speed = 0
+        self.max_turning_speed = max_turning_speed
         self.turning_acceleration = max_turning_accel
-        self.target_speed       = 0
+        self.target_speed = 0
 
         # Dimensions
-        self.mm_width  = ROBOT_WIDTH_MM
+        self.mm_width = ROBOT_WIDTH_MM
         self.mm_height = ROBOT_HEIGHT_MM
-        self.px_width  = (ROBOT_WIDTH_MM  / TABLE_WIDTH_MM)  * FIELD_WIDTH
+        self.px_width = (ROBOT_WIDTH_MM  / TABLE_WIDTH_MM)  * FIELD_WIDTH
         self.px_height = (ROBOT_HEIGHT_MM / TABLE_HEIGHT_MM) * FIELD_HEIGHT
 
         # ── Machine à états ──
@@ -141,25 +130,25 @@ class Robot(Graphique):
         self._blocked_timer = 0.0  # temps passé en BLOCKED
 
         # Cibles internes
-        self._target_angle    = angle
+        self._target_angle = angle
         self._target_distance = 0.0
-        self._face            = 0          # 0 = avant, 1 = arrière
-        self._ratio_vitesse   = 100
+        self._face = 0          # 0 = avant, 1 = arrière
+        self._ratio_vitesse = 100
         self._effective_speed = max_speed_mm_s  # vitesse corrigée par ratio
 
         # File de commandes (rejoindre = orienter puis avancer/reculer)
         self._command_queue = []   # liste de (fn, args)
 
         # Angles/distances utiles (public, lisibles de l'extérieur)
-        self.angle_to_target       = angle
-        self.angle_diff_to_target  = 0
-        self.distance_to_target    = 0
-        self.distance_x_to_target  = 0
-        self.distance_y_to_target  = 0
+        self.angle_to_target = angle
+        self.angle_diff_to_target = 0
+        self.distance_to_target = 0
+        self.distance_x_to_target = 0
+        self.distance_y_to_target = 0
 
-        self._stun_retreat_mm   = 150   # distance de recul en mm
-        self._stun_target_x     = None  # cible à reprendre après recul
-        self._stun_target_y     = None
+        self._stun_retreat_mm = 150   # distance de recul en mm
+        self._stun_target_x = None  # cible à reprendre après recul
+        self._stun_target_y = None
 
         # Graphique
         if image_robot and screen and scaled_vinyle:
@@ -194,9 +183,9 @@ class Robot(Graphique):
     def calculate_target_angle(self, target_mm_x, target_mm_y):
         self.distance_x_to_target = self.mm_x - target_mm_x
         self.distance_y_to_target = target_mm_y - self.mm_y
-        self.distance_to_target   = math.hypot(self.distance_x_to_target,
+        self.distance_to_target = math.hypot(self.distance_x_to_target,
                                                 self.distance_y_to_target)
-        self.angle_to_target      = math.degrees(
+        self.angle_to_target = math.degrees(
             math.atan2(self.distance_y_to_target, self.distance_x_to_target))
         self.angle_diff_to_target = self.normalize_angle(
             self.angle_to_target - self.angle)
@@ -205,7 +194,7 @@ class Robot(Graphique):
     # ── Profils trapézoïdaux ────────────────────
     def _update_speed_trapezoidal(self, dt, distance_restante):
         v_max = self._effective_speed
-        a     = self.acceleration
+        a = self.acceleration
         d_accel = (v_max ** 2) / (2 * a)
 
         if distance_restante < 2 * d_accel:
@@ -226,8 +215,8 @@ class Robot(Graphique):
             self.speed = 0
 
     def _update_turning_speed(self, dt, angle_diff_restante):
-        w_max  = self.max_turning_speed
-        alpha  = self.turning_acceleration
+        w_max = self.max_turning_speed
+        alpha = self.turning_acceleration
         w_peak = min(math.sqrt(2 * alpha * abs(angle_diff_restante)), w_max)
 
         d_brake_ang = (self.turning_speed ** 2) / (2 * alpha) if alpha > 0 else 0
@@ -282,33 +271,32 @@ class Robot(Graphique):
 
         return self._target_distance <= DISTANCE_THRESHOLD
 
-    # ── API publique : commandes non bloquantes ─
     def avancer(self, distance, ratio_vitesse):
         self._effective_speed = self.max_speed * (ratio_vitesse / 100)
         self._target_distance = float(distance)
-        self._face            = 0
-        self.speed            = 0
-        self.state            = MOVING
+        self._face = 0
+        self.speed = 0
+        self.state = MOVING
 
     def reculer(self, distance, ratio_vitesse):
         self._effective_speed = self.max_speed * (ratio_vitesse / 100)
         self._target_distance = float(distance)
-        self._face            = 1
-        self.speed            = 0
-        self.state            = MOVING
+        self._face = 1
+        self.speed = 0
+        self.state = MOVING
 
     def rebond(self, distance, ratio_vitesse):
         self._effective_speed = self.max_speed * (ratio_vitesse / 100)
         self._target_distance = float(distance)
-        self._face            = 1
-        self.speed            = 0
-        self.state            = STUNNED
+        self._face = 1
+        self.speed = 0
+        self.state = STUNNED
 
     def orienter(self, angle, ratio_vitesse):
         self._effective_speed = self.max_speed * (ratio_vitesse / 100)
-        self._target_angle    = float(angle)
-        self.turning_speed    = 0
-        self.state            = ROTATING
+        self._target_angle = float(angle)
+        self.turning_speed = 0
+        self.state = ROTATING
 
     def cibler(self, target_mm_x, target_mm_y, ratio_vitesse):
         self.calculate_target_angle(target_mm_x, target_mm_y)
@@ -435,10 +423,6 @@ class Robot(Graphique):
 
         return distance, angle_relatif, dans_cone_danger
 
-
-# ──────────────────────────────────────────────
-#  Robot ennemi avec patrouille
-# ──────────────────────────────────────────────
 class RobotEnnemi(Robot):
     """
     Robot ennemi autonome qui patrouille entre une liste de waypoints.
@@ -448,13 +432,13 @@ class RobotEnnemi(Robot):
                  waypoints=None, patrol_speed=80):
         super().__init__(scaled_vinyle, screen, image_robot,
                          x=2500, y=1000, angle=180)
-        self._waypoints    = waypoints or [
+        self._waypoints = waypoints or [
             (2500, 300),
             (2500, 1700),
             (500,  1700),
             (500,  300),
         ]
-        self._wp_index      = 0
+        self._wp_index = 0
         self._patrol_speed  = patrol_speed
         self._go_to_next_wp()
 
@@ -469,6 +453,9 @@ class RobotEnnemi(Robot):
             if closest is not None and closest < COLLISION_DISTANCE:
                 if self.state == MOVING:
                     self._start_stun()
+
+                    #Décommenter pour rendre ennemi statique et commenter au-dessus
+                    #self.state = BLOCKED
             else:
                 pass
 
