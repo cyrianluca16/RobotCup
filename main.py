@@ -1,9 +1,11 @@
 import pygame
 import pygame_gui
 import math
+import warnings
+warnings.filterwarnings("ignore")
 
 from side_bare import create_sidebar, parse_number, UI_W
-from robot import Robot, RobotEnnemi, FPS, COLLISION_DISTANCE, IDLE, create_robot_surface
+from robot import COLLECTING, Robot, RobotEnnemi, FPS, COLLISION_DISTANCE, IDLE, create_robot_surface
 from setup import init, Screen_WIDTH, Screen_HEIGHT, FIELD_WIDTH, FIELD_HEIGHT
 from read_strat_file import strategie, parse_fdd_commands, parse_fdd_commands_symetrique
 from rec_strat import (write_rejoindre_command, write_orienter_command,
@@ -18,7 +20,12 @@ file_rec_path   = 'rec.txt'
 # ── Obstacle ───────────────────────────────────────────────
 obstacle = Obstacle()
 
-collectibles = [Collectible() for _ in range(5)]
+collectibles = [Collectible() for _ in range(1)]
+dict_collectibles = {}
+for i in range(len(collectibles)):
+    dict_collectibles[f"collectible_{i}"] = (collectibles[i].has_collected)
+
+
 
 # ── État global de l'UI ─────────────────────────────────────
 face_robot = 0
@@ -69,6 +76,8 @@ robot_ennemi = RobotEnnemi(
     ],
     patrol_speed=70,
 )
+
+score = 0
 
 # ── Sidebar ─────────────────────────────────────────────────
 (ui_panel, lbl_init, ent_x, ent_y, ent_o, lbl_x, lbl_y, lbl_o,
@@ -409,7 +418,14 @@ while running:
     #obstacle.draw(screen, color=(255, 80, 0))
 
     for collectible in collectibles:
-        collectible.draw(screen, color=(80, 255, 80))
+        collectible.draw(screen, color=(0, 34, 255))
+    
+    for collectible in collectibles:
+        if collectible.has_collected(robot.mm_x, robot.mm_y):
+            score += 1
+            print(f"Collectible ramassé ! Score: {score}")
+            collectibles.remove(collectible)
+            #collectibles = [Collectible() for _ in range(3)]  # Regénère les collectibles
 
     # 4. UI sidebar
     manager.update(dt)

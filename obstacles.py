@@ -7,7 +7,7 @@ class Obstacle:
         # Position et dimensions de l'obstacle en mm
         self.mm_x = 600
         self.mm_y = 2000   
-        self.width_mm  = 1800
+        self.width_mm = 1800
         self.height_mm = 400
 
     def _to_px(self, mm_x, mm_y):
@@ -30,7 +30,7 @@ class Obstacle:
         h = int(self.height_mm * FIELD_HEIGHT / TABLE_HEIGHT_MM)
         return pygame.Rect(x, y, w, h)
     
-    def draw(self, screen, color=(255, 80, 0)):
+    def draw(self, screen, color=(0, 34, 255)):
         rect = self.generate_obstacle()
         pygame.draw.rect(screen, color, rect)
         

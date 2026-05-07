@@ -26,6 +26,7 @@ ROTATING = "ROTATING"
 MOVING = "MOVING"
 BLOCKED = "BLOCKED" 
 STUNNED = "STUNNED"
+COLLECTING = "COLLECTING"
 
 
 def create_robot_surface():
@@ -128,6 +129,8 @@ class Robot(Graphique):
         # ── Machine à états ──
         self.state = IDLE          # état courant
         self._blocked_timer = 0.0  # temps passé en BLOCKED
+
+        self.has_collected = False
 
         # Cibles internes
         self._target_angle = angle
@@ -321,10 +324,11 @@ class Robot(Graphique):
         return self.state == IDLE
 
     # ── Mise à jour par frame ───────────────────
-    def update(self, dt, obstacles=None):
+    def update(self, dt, obstacles=None, collectibles=None):
         """
         Appeler une fois par frame depuis la boucle principale.
         obstacles : liste de Robot (ou objets avec .mm_x, .mm_y) à éviter.
+        collectibles : liste de Collectible (ou objets avec .mm_x, .mm_y) à collecter.
         """
         # ── Détection de collision ─────────────────
         if obstacles:
@@ -334,6 +338,15 @@ class Robot(Graphique):
                     self._start_stun()
             else:
                 pass
+
+        if collectibles:
+            closest_col = self._closest_collectible(collectibles)
+            if closest_col is not None and closest_col < COLLISION_DISTANCE:
+                print("Collectible à proximité !")
+                self.state = COLLECTING
+                self.has_collected = True
+                # Ici, on pourrait ajouter une logique pour "collecter" l'objet,
+                # par exemple en le retirant de la liste des collectibles.
 
         # ── Exécution de l'état courant ────────────
         if self.state == IDLE:
@@ -378,6 +391,15 @@ class Robot(Graphique):
             else:
                 # Robot ennemi : distance centre à centre
                 d = math.hypot(self.mm_x - obs.mm_x, self.mm_y - obs.mm_y)
+            if min_dist is None or d < min_dist:
+                min_dist = d
+        return min_dist
+    
+    def _closest_collectible(self, collectibles):
+        """Retourne la distance au plus proche collectible, ou None."""
+        min_dist = None
+        for col in collectibles:
+            d = math.hypot(self.mm_x - col.mm_x, self.mm_y - col.mm_y)
             if min_dist is None or d < min_dist:
                 min_dist = d
         return min_dist
