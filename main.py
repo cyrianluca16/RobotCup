@@ -12,9 +12,8 @@ from obstacles import Obstacle
 
 # ── Chemins par défaut ──────────────────────────────────────
 file_strat_path = 'test.txt'
-file_rec_path   = 'rec.txt'
+file_rec_path = 'rec.txt'
 
-# ── Obstacle ───────────────────────────────────────────────
 obstacle = Obstacle()
 
 # ── État global de l'UI ─────────────────────────────────────

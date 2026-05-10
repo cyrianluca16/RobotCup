@@ -285,13 +285,6 @@ class Robot(Graphique):
         self.speed = 0
         self.state = MOVING
 
-    def rebond(self, distance, ratio_vitesse):
-        self._effective_speed = self.max_speed * (ratio_vitesse / 100)
-        self._target_distance = float(distance)
-        self._face = 1
-        self.speed = 0
-        self.state = STUNNED
-
     def orienter(self, angle, ratio_vitesse):
         self._effective_speed = self.max_speed * (ratio_vitesse / 100)
         self._target_angle = float(angle)
