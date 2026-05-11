@@ -20,10 +20,11 @@ file_rec_path = 'rec.txt'
 # ── Obstacle ───────────────────────────────────────────────
 obstacle = Obstacle()
 
-collectibles = [Collectible() for _ in range(1)]
-dict_collectibles = {}
-for i in range(len(collectibles)):
-    dict_collectibles[f"collectible_{i}"] = (collectibles[i].has_collected)
+coord_obstacle_mm_hor = [(1750, 875), (1050, 875), (1800, 250), (1000, 250)]
+coord_obstacle_mm_ver = [(2750, 1300), (2750, 500), (150, 1300), (150, 500)]
+
+collectibles = [Collectible(mm_x=x, mm_y=y) for x, y in coord_obstacle_mm_hor]
+collected_set = set()
 
 
 
@@ -415,17 +416,19 @@ while running:
         screen.blit(txt, (10, FIELD_HEIGHT - 30))
 
     #Ligne à décommenter pour débug (affiche obstacle sur map)
-    #obstacle.draw(screen, color=(255, 80, 0))
+    obstacle.draw(screen, color=(255, 80, 0))
 
     for collectible in collectibles:
         collectible.draw(screen, color=(0, 34, 255))
     
-    for collectible in collectibles:
-        if collectible.has_collected(robot.mm_x, robot.mm_y):
+    for collectible in collectibles[:]:  # iterate over a copy
+        if collectible not in collected_set and collectible.has_collected(robot.mm_x, robot.mm_y):
+            collected_set.add(collectible)
             score += 1
-            print(f"Collectible ramassé ! Score: {score}")
-            collectibles.remove(collectible)
-            #collectibles = [Collectible() for _ in range(3)]  # Regénère les collectibles
+            print(f"Collectible collecté ! Score: {score}")
+    
+    # Remove collected collectibles
+    collectibles = [c for c in collectibles if c not in collected_set]
 
     # 4. UI sidebar
     manager.update(dt)

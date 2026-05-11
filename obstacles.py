@@ -11,7 +11,7 @@ class Obstacle:
         self.height_mm = 400
 
     def _to_px(self, mm_x, mm_y):
-        px_x = int(mm_x * FIELD_WIDTH  / TABLE_WIDTH_MM)
+        px_x = int((TABLE_WIDTH_MM - mm_x) * FIELD_WIDTH  / TABLE_WIDTH_MM)
         px_y = int((TABLE_HEIGHT_MM - mm_y) * FIELD_HEIGHT / TABLE_HEIGHT_MM)
         return px_x, px_y
     
@@ -25,7 +25,7 @@ class Obstacle:
         return math.hypot(closest_x - robot_mm_x, closest_y - robot_mm_y)
 
     def generate_obstacle(self):
-        x, y = self._to_px(self.mm_x, self.mm_y)
+        x, y = self._to_px(self.mm_x + self.width_mm, self.mm_y)
         w = int(self.width_mm * FIELD_WIDTH  / TABLE_WIDTH_MM)
         h = int(self.height_mm * FIELD_HEIGHT / TABLE_HEIGHT_MM)
         return pygame.Rect(x, y, w, h)
