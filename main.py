@@ -28,7 +28,6 @@ collectibles += [VerticalCollectible(mm_x=x, mm_y=y) for x, y in coord_obstacle_
 collected_set = set()
 
 
-
 # ── État global de l'UI ─────────────────────────────────────
 face_robot = 0
 vitesse_robot = 100
@@ -422,11 +421,25 @@ while running:
     for collectible in collectibles:
         collectible.draw(screen, color=(0, 34, 255))
     
-    for collectible in collectibles[:]:  # iterate over a copy
+    #Pickup pour robot allié
+    for collectible in collectibles[:]:
         if collectible not in collected_set and collectible.has_collected(robot.mm_x, robot.mm_y):
-            collected_set.add(collectible)
-            score += 1
-            print(f"Collectible collecté ! Score: {score}")
+            if robot.pickup(collectible):
+                collected_set.add(collectible)
+    
+    delivered = robot.deliver()
+    if delivered:
+        collected_set.add(delivered)
+    
+    #Pickup pour robot adversaire
+    for collectible in collectibles[:]:
+        if collectible not in collected_set and collectible.has_collected(robot_ennemi.mm_x, robot_ennemi.mm_y):
+            if robot_ennemi.pickup(collectible):
+                collected_set.add(collectible)
+    
+    delivered = robot_ennemi.deliver()
+    if delivered:
+        collected_set.add(delivered)
     
     # Remove collected collectibles
     collectibles = [c for c in collectibles if c not in collected_set]

@@ -132,6 +132,10 @@ class Robot(Graphique):
 
         self.has_collected = False
 
+        self.carrying_collectible = None
+        self.score = 0
+        self.start_zone_radius = 300  # mm
+
         # Cibles internes
         self._target_angle = angle
         self._target_distance = 0.0
@@ -435,6 +439,25 @@ class Robot(Graphique):
             self._effective_speed = max_speed_mm_s       # voie libre : vitesse max
 
         return distance, angle_relatif, dans_cone_danger
+    
+    def pickup(self, collectible):
+        if self.carrying_collectible is None:
+            self.carrying_collectible = collectible
+            #debug
+            #print(f"Robot picked up collectible at ({collectible.mm_x}, {collectible.mm_y})")
+            return True
+        return False
+    
+    def deliver(self, start_x=300, start_y=950):
+        if self.carrying_collectible is not None:
+            distance = math.hypot(self.mm_x - start_x, self.mm_y - start_y)
+            if distance < self.start_zone_radius:
+                self.score += 1
+                print(f"Robot delivered collectible! Score: {self.score}")
+                result = self.carrying_collectible
+                self.carrying_collectible = None
+                return result
+        return None
 
 class RobotEnnemi(Robot):
     """
