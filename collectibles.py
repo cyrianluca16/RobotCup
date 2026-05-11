@@ -50,3 +50,14 @@ class Collectible(Obstacle):
         pygame.draw.rect(screen, color, rect)
         circle_center, circle_radius = self.generate_collect_circle()
         pygame.draw.circle(screen, (255, 0, 0), circle_center, circle_radius, width=1)
+
+class VerticalCollectible(Collectible):
+    def __init__(self, mm_x=None, mm_y=None, mm_width=200, mm_height=100):
+        super().__init__(mm_x, mm_y, mm_height, mm_width)
+    
+    def midpoint(self):
+        x1 = self.mm_x
+        y1 = self.mm_y
+        x2 = self.mm_x + self.mm_width
+        y2 = self.mm_y - self.mm_height
+        return (x2 + x1) / 2, (y2 + y1) / 2

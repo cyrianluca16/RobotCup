@@ -11,7 +11,7 @@ from read_strat_file import strategie, parse_fdd_commands, parse_fdd_commands_sy
 from rec_strat import (write_rejoindre_command, write_orienter_command,
                        create_txt_file, display_mouse_coords)
 from obstacles import Obstacle
-from collectibles import Collectible
+from collectibles import Collectible, VerticalCollectible
 
 # ── Chemins par défaut ──────────────────────────────────────
 file_strat_path = 'test.txt'
@@ -24,6 +24,7 @@ coord_obstacle_mm_hor = [(1750, 875), (1050, 875), (1800, 250), (1000, 250)]
 coord_obstacle_mm_ver = [(2750, 1300), (2750, 500), (150, 1300), (150, 500)]
 
 collectibles = [Collectible(mm_x=x, mm_y=y) for x, y in coord_obstacle_mm_hor]
+collectibles += [VerticalCollectible(mm_x=x, mm_y=y) for x, y in coord_obstacle_mm_ver]
 collected_set = set()
 
 
