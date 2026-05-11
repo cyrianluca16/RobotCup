@@ -324,11 +324,10 @@ class Robot(Graphique):
         return self.state == IDLE
 
     # ── Mise à jour par frame ───────────────────
-    def update(self, dt, obstacles=None, collectibles=None):
+    def update(self, dt, obstacles=None):
         """
         Appeler une fois par frame depuis la boucle principale.
         obstacles : liste de Robot (ou objets avec .mm_x, .mm_y) à éviter.
-        collectibles : liste de Collectible (ou objets avec .mm_x, .mm_y) à collecter.
         """
         # ── Détection de collision ─────────────────
         if obstacles:
@@ -339,14 +338,6 @@ class Robot(Graphique):
             else:
                 pass
 
-        if collectibles:
-            closest_col = self._closest_collectible(collectibles)
-            if closest_col is not None and closest_col < COLLISION_DISTANCE:
-                print("Collectible à proximité !")
-                self.state = COLLECTING
-                self.has_collected = True
-                # Ici, on pourrait ajouter une logique pour "collecter" l'objet,
-                # par exemple en le retirant de la liste des collectibles.
 
         # ── Exécution de l'état courant ────────────
         if self.state == IDLE:
