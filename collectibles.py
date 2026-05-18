@@ -5,7 +5,7 @@ from obstacles import Obstacle
 from setup import TABLE_WIDTH_MM, TABLE_HEIGHT_MM, FIELD_HEIGHT, FIELD_WIDTH
 
 class Collectible(Obstacle):
-    def __init__(self, mm_x=None, mm_y=None, mm_width=200, mm_height=100):
+    def __init__(self, mm_x=None, mm_y=None, mm_width=150, mm_height=50):
         super().__init__()
         #self.mm_x = random.randint(0, FIELD_WIDTH)
         #self.mm_y = random.randint(0, FIELD_HEIGHT)
@@ -52,7 +52,7 @@ class Collectible(Obstacle):
         pygame.draw.circle(screen, (255, 0, 0), circle_center, circle_radius, width=1)
 
 class VerticalCollectible(Collectible):
-    def __init__(self, mm_x=None, mm_y=None, mm_width=200, mm_height=100):
+    def __init__(self, mm_x=None, mm_y=None, mm_width=150, mm_height=50 ):
         super().__init__(mm_x, mm_y, mm_height, mm_width)
     
     def midpoint(self):

@@ -132,7 +132,10 @@ class Robot(Graphique):
 
         self.has_collected = False
 
-        self.carrying_collectible = None
+        self.carrying_collectible = []
+        self.max_carrying_capacity = 4
+        self.delivery_zones = [] 
+        self.collectibles_in_zone = {} 
         self.score = 0
         self.start_zone_radius = 300  # mm
 
@@ -441,22 +444,46 @@ class Robot(Graphique):
         return distance, angle_relatif, dans_cone_danger
     
     def pickup(self, collectible):
-        if self.carrying_collectible is None:
-            self.carrying_collectible = collectible
+        if len(self.carrying_collectible) < self.max_carrying_capacity:
+            self.carrying_collectible.append(collectible)
             #debug
             #print(f"Robot picked up collectible at ({collectible.mm_x}, {collectible.mm_y})")
             return True
         return False
     
-    def deliver(self, start_x=300, start_y=950):
-        if self.carrying_collectible is not None:
-            distance = math.hypot(self.mm_x - start_x, self.mm_y - start_y)
-            if distance < self.start_zone_radius:
-                self.score += 1
-                print(f"Robot delivered collectible! Score: {self.score}")
-                result = self.carrying_collectible
-                self.carrying_collectible = None
-                return result
+    def deliver(self):
+        if self.carrying_collectible is not None and len(self.carrying_collectible) > 0:
+            delivered = []
+        
+            # Check each delivery zone
+            for zone_id, zone in enumerate(self.delivery_zones):
+                zone_x, zone_y, zone_size = zone['x'], zone['y'], zone['size']
+                
+                # Check if robot is in this zone
+                if (zone_x <= self.mm_x <= zone_x + zone_size and 
+                zone_y - zone_size <= self.mm_y <= zone_y):
+                    
+                    # Check if zone has space (max 4 collectibles)
+                    if zone_id not in self.collectibles_in_zone:
+                        self.collectibles_in_zone[zone_id] = []
+                    
+                    if len(self.collectibles_in_zone[zone_id]) < 4:
+                        # Deposit one collectible
+                        for i, collectible in enumerate(self.carrying_collectible):
+                            if len(self.collectibles_in_zone[zone_id]) < 4:
+                                self.collectibles_in_zone[zone_id].append(collectible)
+                                self.score += 1
+                                delivered.append(collectible)
+                                print(f"Robot delivered collectible to zone {zone_id}! Score: {self.score}")
+                        
+                        # Remove delivered collectibles from carrying
+                        self.carrying_collectible = [c for c in self.carrying_collectible if c not in delivered]
+                        
+                        if not self.carrying_collectible:  # Empty list
+                            self.carrying_collectible = []
+                        
+                        if delivered:
+                            return delivered
         return None
 
 class RobotEnnemi(Robot):
