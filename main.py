@@ -1,20 +1,52 @@
 import pygame
 import pygame_gui
 import math
+import warnings
+warnings.filterwarnings("ignore")
 
 from side_bare import create_sidebar, parse_number, UI_W
-from robot import Robot, RobotEnnemi, FPS, COLLISION_DISTANCE, IDLE, create_robot_surface
+from robot import COLLECTING, Robot, RobotEnnemi, FPS, COLLISION_DISTANCE, IDLE, create_robot_surface
 from setup import init, Screen_WIDTH, Screen_HEIGHT, FIELD_WIDTH, FIELD_HEIGHT
 from read_strat_file import strategie, parse_fdd_commands, parse_fdd_commands_symetrique
 from rec_strat import (write_rejoindre_command, write_orienter_command,
                        create_txt_file, display_mouse_coords)
 from obstacles import Obstacle
+from collectibles import Collectible, VerticalCollectible
 
 # ── Chemins par défaut ──────────────────────────────────────
 file_strat_path = 'test.txt'
 file_rec_path = 'rec.txt'
 
 obstacle = Obstacle()
+
+coord_obstacle_mm_hor = [(150, 1100), (150, 1150), (150, 1200), (150, 1250),
+                         (150, 300), (150, 350), (150, 400), (150, 450),
+                         (2700, 300), (2700, 350), (2700, 400), (2700, 450),
+                         (2700, 1100), (2700, 1150), (2700, 1200), (2700, 1250)]
+
+coord_obstacle_mm_ver = [(1050, 875), (1100, 875), (1150, 875), (1200, 875),
+                         (1750, 875), (1800, 875), (1850, 875), (1900, 875),
+                         (1800, 250), (1850, 250), (1900, 250), (1950, 250),
+                         (1000, 250), (1050, 250), (1100, 250), (1150, 250)]
+
+delivery_zones = [
+    {'x': 1200, 'y': 1550, 'size': 200},
+    {'x': 1700, 'y': 1550, 'size': 200},
+    {'x': 50, 'y': 900, 'size': 200},
+    {'x': 750, 'y': 900, 'size': 200},
+    {'x': 1450, 'y': 900, 'size': 200},
+    {'x': 2150, 'y': 900, 'size': 200},
+    {'x': 2850, 'y': 900, 'size': 200},
+    {'x': 650, 'y': 200, 'size': 200},
+    {'x': 1450, 'y': 200, 'size': 200},
+    {'x': 2250, 'y': 200, 'size': 200},
+]
+
+
+collectibles = [Collectible(mm_x=x, mm_y=y) for x, y in coord_obstacle_mm_hor]
+collectibles += [VerticalCollectible(mm_x=x, mm_y=y) for x, y in coord_obstacle_mm_ver]
+collected_set = set()
+
 
 # ── État global de l'UI ─────────────────────────────────────
 face_robot = 0
@@ -63,8 +95,14 @@ robot_ennemi = RobotEnnemi(
         (500,  300),
         (500,  1700),
     ],
-    patrol_speed=70,
+    patrol_speed=0,
 )
+
+score = 0
+
+# Setup des zones de livraison pour les robots
+robot.delivery_zones = delivery_zones
+robot_ennemi.delivery_zones = delivery_zones
 
 # ── Sidebar ─────────────────────────────────────────────────
 (ui_panel, lbl_init, ent_x, ent_y, ent_o, lbl_x, lbl_y, lbl_o,
@@ -403,6 +441,34 @@ while running:
 
     #Ligne à décommenter pour débug (affiche obstacle sur map)
     #obstacle.draw(screen, color=(255, 80, 0))
+
+    for collectible in collectibles:
+        collectible.draw(screen, color=(0, 34, 255))
+    
+    #Pickup pour robot allié 
+    for collectible in collectibles[:]:
+        if collectible not in collected_set and collectible.has_collected(robot.mm_x, robot.mm_y):
+            if robot.pickup(collectible):
+                collected_set.add(collectible)
+    
+    delivered = robot.deliver()
+    if delivered:
+        for collectible in delivered:
+            collected_set.add(collectible)
+    
+    #Pickup pour robot adversaire
+    for collectible in collectibles[:]:
+        if collectible not in collected_set and collectible.has_collected(robot_ennemi.mm_x, robot_ennemi.mm_y):
+            if robot_ennemi.pickup(collectible):
+                collected_set.add(collectible)
+    
+    delivered = robot_ennemi.deliver()
+    if delivered:
+        for collectible in delivered:
+            collected_set.add(collectible)
+    
+    # Remove collected collectibles
+    collectibles = [c for c in collectibles if c not in collected_set]
 
     # 4. UI sidebar
     manager.update(dt)
